@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Ecotiendas-app",
+    "slug": "Ecotiendas-app",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "name": "Ecotiendas-app"
+}
