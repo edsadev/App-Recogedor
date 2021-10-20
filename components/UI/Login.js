@@ -1,31 +1,47 @@
 import React from 'react'
-import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity} from 'react-native'
+import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, SafeAreaView} from 'react-native'
 
 import Hojas2 from '../../utils/images/Hojas_2.png'
 
 import { VERDE, BLANCO } from '../../utils/colors.js'
+import { connect } from 'react-redux'
 
-export default class Login extends React.Component{
+import { setUser } from '../../actions'
+
+class Login extends React.Component{
+  login = () => {
+    if (this.correo === "esala.094@gmail.com" && this.contraseña === "123456"){
+      this.props.dispatch(setUser(1, 'ecoamigo', 'Edmundo', undefined, 1000))
+    } else {
+      Alert.alert('Hubo un error al iniciar sesión')
+    }
+  }
+  check = () => {
+    debugger
+    console.log(this.correo, this.contraseña)
+  }
   render(){
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.formulario}>
           <Text style={styles.subtitle}>Iniciar sesión</Text>
           <Text style={styles.label}>Correo electrónico</Text>
           <TextInput 
             style={styles.input}
             placeholder="ejemplo@correo.com"
+            onChangeText={(text) => this.correo = text}
           />
           <Text style={styles.label}>Contraseña</Text>
           <TextInput 
             placeholder="xxxxxxxxxxx"
             style={styles.input}
             secureTextEntry={true}
+            onChangeText={(text) => this.contraseña = text}
           />
-          <TouchableOpacity>
+          <TouchableOpacity onPress={this.check}>
             <Text style={styles.text}>¡Olvidé mi contraseña!</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.boton}>
+          <TouchableOpacity style={styles.boton} onPressIn={this.login}>
             <Text style={{color: BLANCO, fontSize: 16}}>Ingresar</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.boton, {backgroundColor: BLANCO}]}>
@@ -34,10 +50,12 @@ export default class Login extends React.Component{
           <Image style={styles.image} source={Hojas2}
           />
         </View>
-      </View>
+      </SafeAreaView>
     )
   }
 }
+
+export default connect()(Login)
 
 const styles = StyleSheet.create({
   container: {

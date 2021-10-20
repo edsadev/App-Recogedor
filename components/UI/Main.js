@@ -1,5 +1,5 @@
 import React from 'react'
-import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native'
+import {View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native'
 
 import Logo from '../../utils/images/Logo.png'
 import Fondo from '../../utils/images/Mancha.png'
@@ -9,19 +9,20 @@ import { CELESTE, VERDE, BLANCO } from '../../utils/colors.js'
 
 export default class Login extends React.Component{
   render(){
+    const {navigation} = this.props
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Image source={Hojas} style={styles.imageTop}/>
         <Image source={Logo}/>
         <Text style={{color: VERDE}}>Bienvenido/a a tu ecotienda online</Text>
-        <TouchableOpacity style={styles.boton}>
+        <TouchableOpacity style={styles.boton} onPress={() => navigation.navigate('Login')}>
           <Text style={{color: BLANCO}}>Iniciar sesión</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.boton}>
+        <TouchableOpacity style={styles.boton} onPress={() => navigation.navigate('Registro')}>
           <Text style={{color: BLANCO}}>Registrarse</Text>
         </TouchableOpacity>
         <Image source={Fondo} style={styles.imageBottom}/>
-      </View>
+      </SafeAreaView>
     )
   }
 }

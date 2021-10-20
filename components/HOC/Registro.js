@@ -1,10 +1,11 @@
 import React from 'react'
-import {View, Text, StyleSheet, Image, TextInput, KeyboardAvoidingView, TouchableOpacity, Platform} from 'react-native'
+import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView} from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 
 import DefaultUser from '../../utils/images/DefaultUser.png'
 
 import { VERDE, BLANCO } from '../../utils/colors.js'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default class Login extends React.Component{
   state={
@@ -30,8 +31,8 @@ export default class Login extends React.Component{
   render(){
     const {image} = this.state
     return (
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <View style={styles.formulario}>
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.formulario}>
           <Text style={styles.subtitle}>Registrarse</Text>
           {image && <Image source={{ uri: image }} style={styles.avatar} />}
           {!image && <Image source={DefaultUser} style={styles.avatar} />}
@@ -86,11 +87,11 @@ export default class Login extends React.Component{
           <TouchableOpacity style={styles.boton}>
             <Text style={{color: BLANCO}}>Registrar</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.boton, {backgroundColor: BLANCO}]}>
+          <TouchableOpacity style={[styles.boton, {backgroundColor: BLANCO, marginBottom: 50}]}>
             <Text style={[{color: VERDE}]}>¿Ya tienes cuenta? ¡Ingresa!</Text>
           </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+        </ScrollView>
+      </SafeAreaView>
     )
   }
 }
