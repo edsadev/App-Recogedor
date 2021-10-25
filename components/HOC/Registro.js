@@ -1,6 +1,10 @@
-import React from 'react'
-import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView} from 'react-native'
+import React, {useState} from 'react'
+import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, Platform} from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
+import {Picker} from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+
 
 import DefaultUser from '../../utils/images/DefaultUser.png'
 
@@ -8,8 +12,11 @@ import { VERDE, BLANCO } from '../../utils/colors.js'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default class Login extends React.Component{
-  state={
-    image: null
+  state = {
+    image: null,
+    genero: 'masculino',
+    date: new Date(),
+    showDate: false
   }
   pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -28,8 +35,38 @@ export default class Login extends React.Component{
       }))
     }
   }
+  handleChangeGender = (e) => {
+    this.setState(() => ({
+      genero: e
+    }))
+  }
+  review = () => {
+    console.log(this.state)
+  }
+  showDatePicker = () => {
+    this.setState(() => ({
+      showDate: true
+    }))
+  }
+  hideDatePicker = () => {
+    this.setState(() => ({
+      showDate: false
+    }))
+  }
+  handleChangeDateIOS = (value) => {
+    this.setState(() => ({
+      date: value,
+      showDate: false
+    }))
+  }
+  handleChangeDateAndroid = (e, value) => {
+    this.setState(() => ({
+      date: value,
+      showDate: false
+    }))
+  }
   render(){
-    const {image} = this.state
+    const {image, date, showDate} = this.state
     return (
       <SafeAreaView style={styles.container}>
         <ScrollView style={styles.formulario}>
@@ -37,7 +74,7 @@ export default class Login extends React.Component{
           {image && <Image source={{ uri: image }} style={styles.avatar} />}
           {!image && <Image source={DefaultUser} style={styles.avatar} />}
           <TouchableOpacity onPress={this.pickImage}>
-            <Text style={{color: VERDE, textAlign: 'center', paddingTop: 5}}>Agregar imagen</Text>
+            <Text style={{color: VERDE, textAlign: 'center', paddingTop: 15, paddingBottom: 25}}>Agregar imagen</Text>
           </TouchableOpacity>
           <View style={styles.formRow}>
             <View style={styles.formRow1}>
@@ -83,8 +120,73 @@ export default class Login extends React.Component{
               <TextInput style={styles.input}/>
             </View>
           </View>
+          <View style={styles.formRow}>
+            <View style={styles.formRow1}>
+              <View>
+                {Platform.OS === 'ios'
+                  ? <View>
+                      <Text style={styles.label}>Fecha de nacimiento</Text>
+                      <View style={[styles.input, {paddingVertical: 0, paddingHorizontal: 0, flexDirection: 'row', alignItems: 'center', flex: 1}]}>
+                        <TouchableOpacity style={[styles.boton, {paddingHorizontal: 20, marginVertical: 0}]} onPress={this.showDatePicker}>
+                          <Text style={{color: BLANCO}}>Seleccionar fecha</Text>
+                        </TouchableOpacity>
+                        <Text style={{flex: 1, textAlign: 'center'}}>
+                          {date 
+                            ? `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}` 
+                            : `${(new Date()).getDate()}/${(new Date()).getMonth()+1}/${(new Date()).getFullYear()}`
+                          }
+                        </Text>  
+                      </View>
+                      <DateTimePickerModal
+                        isVisible={showDate}
+                        mode="date"
+                        onConfirm={this.handleChangeDateIOS}
+                        onCancel={this.hideDatePicker}
+                      />
+                    </View>
+                  : <View>
+                      <Text style={styles.label}>Fecha de nacimiento</Text>
+                      <TouchableOpacity style={styles.input} editable={true} onPress={this.showDatePicker}>
+                        <Text style={{color: "#000", paddingVertical: 8, textAlign: 'center'}}>
+                          {date 
+                            ? `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}` 
+                            : `${(new Date()).getDate()}/${(new Date()).getMonth()+1}/${(new Date()).getFullYear()}`
+                          }
+                        </Text>
+                        {showDate && (
+                          <DateTimePicker 
+                            testID="dateTimePicker"
+                            value={date ? date : new Date()}
+                            mode={'date'}
+                            display="default"
+                            is24Hour={true}
+                            onChange={this.handleChangeDateAndroid}
+                          />
+                        )}
+                      </TouchableOpacity>
+                  </View>
+                }
+              </View>
+            </View>
+          </View>
+          <View style={styles.formRow}>
+            <View style={styles.formRow1}>
+              <Text style={styles.label}>Género</Text>
+              <View style={Platform.OS === 'ios' ? [styles.input, {overflow: 'hidden', paddingHorizontal: 2, paddingVertical: 15}] : [styles.input, {overflow: 'hidden'}]}>
+                <Picker
+                  selectedValue={this.state.genero}
+                  onValueChange={this.handleChangeGender}
+                  style={Platform.OS !== 'ios' ? {marginVertical: 6} : {marginVertical: -80}}
+                  itemStyle={Platform.OS === 'ios' && {fontSize: 16, }}
+                >
+                  <Picker.Item label="Masculino" value="masculino" />
+                  <Picker.Item label="Femenino" value="femenino" />
+                </Picker>
+              </View>
+            </View>
+          </View>
           <Text style={[{color: VERDE, paddingHorizontal: 40, marginBottom: 20}]}>Al registrarte aceptas los términos y condiciones</Text>
-          <TouchableOpacity style={styles.boton}>
+          <TouchableOpacity style={styles.boton} onPress={this.review}>
             <Text style={{color: BLANCO}}>Registrar</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.boton, {backgroundColor: BLANCO, marginBottom: 50}]}>
@@ -117,6 +219,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 40,
     paddingVertical: 6,
+    marginBottom: 5
   },
   formRow1: {
     flex: 1,
@@ -128,7 +231,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    paddingBottom: 2,
+    paddingBottom: 10,
   },
   subtitle: {
     fontSize: 24,
@@ -141,7 +244,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderStyle: 'solid',
     paddingHorizontal: 15,
-    paddingVertical: 5,
+    paddingVertical: Platform.OS === 'ios'? 8 : 3,
     borderColor: VERDE,
     borderWidth: 1,
     borderRadius: 25,

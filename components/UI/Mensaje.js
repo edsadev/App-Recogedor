@@ -64,7 +64,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   bloqueCeleste: {
-    paddingVertical: 30,
+    paddingTop: Platform.OS !== 'ios' ? 70 : 30,
+    paddingBottom: Platform.OS !== 'ios' ? 50 : 30,
   }, 
   bloqueBlanco: {
     flexDirection: 'column',

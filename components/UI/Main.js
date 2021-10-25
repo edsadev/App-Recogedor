@@ -1,5 +1,5 @@
 import React from 'react'
-import {View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native'
+import {View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView, Platform } from 'react-native'
 
 import Logo from '../../utils/images/Logo.png'
 import Fondo from '../../utils/images/Mancha.png'
@@ -18,7 +18,7 @@ export default class Login extends React.Component{
         <TouchableOpacity style={styles.boton} onPress={() => navigation.navigate('Login')}>
           <Text style={{color: BLANCO}}>Iniciar sesión</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.boton} onPress={() => navigation.navigate('Registro')}>
+        <TouchableOpacity style={[styles.boton, {marginBottom: 150}]} onPress={() => navigation.navigate('Registro')}>
           <Text style={{color: BLANCO}}>Registrarse</Text>
         </TouchableOpacity>
         <Image source={Fondo} style={styles.imageBottom}/>
@@ -34,7 +34,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingTop: 50,
-    paddingBottom: 150,
   },
   boton: {
     backgroundColor: VERDE,

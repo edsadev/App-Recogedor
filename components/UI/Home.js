@@ -1,7 +1,10 @@
 import React from 'react'
-import { View, Text, TouchableWithoutFeedback, StyleSheet, SafeAreaView, ScrollView, Platform, StatusBar, ImageBackground, Image} from 'react-native'
+import { View, Text, TouchableWithoutFeedback, StyleSheet, SafeAreaView, ScrollView, Platform, StatusBar, ImageBackground, Image, TouchableOpacity, NativeModules, LayoutAnimation} from 'react-native'
 import { connect } from 'react-redux'
 import { Feather } from '@expo/vector-icons';
+
+import { FontAwesome } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 import Patron from '../../utils/images/patron.png'
 import Logo from '../../utils/images/LogoSinFondo.png'
@@ -11,21 +14,37 @@ import Ecotienda from '../../utils/images/Ecotienda.png'
 import Botellas from '../../utils/images/Botellas.png'
 import Decoración from '../../utils/images/Decoración.png'
 
+import { unsetUser } from '../../actions';
+
+const { UIManager } = NativeModules;
+
+UIManager.setLayoutAnimationEnabledExperimental &&
+  UIManager.setLayoutAnimationEnabledExperimental(true);
 
 import { CELESTE, BLANCO, VERDE, AZUL, CELESTEOSCURO, AMARILLO, NARANJA } from '../../utils/colors'
-import { RotationGestureHandler, TouchableOpacity } from 'react-native-gesture-handler';
 
 class Home extends React.Component {
+  state = {
+    menuBottom: -300
+  }
+  handleMenu = () => {
+    LayoutAnimation.easeInEaseOut()
+    this.setState(() => (
+      this.state.menuBottom === 0
+        ? {menuBottom: -300}
+        : {menuBottom: 0}
+    ))
+  }
   render(){
     const { authedUser, navigation } = this.props
     return (
       <SafeAreaView style={[styles.AndroidSafeArea]}>
+        <View style={styles.navBar}>
+          <TouchableWithoutFeedback accessibilityRole={'menu'} onPress={this.handleMenu}>
+            <Feather name="settings" size={32} color="black" />
+          </TouchableWithoutFeedback>
+        </View>
         <ScrollView>
-          <View style={styles.navBar}>
-            <TouchableWithoutFeedback accessibilityRole={'menu'}>
-              <Feather name="settings" size={32} color="black" />
-            </TouchableWithoutFeedback>
-          </View>
           <View style={{backgroundColor: CELESTE}}>
             <ImageBackground source={Patron} style={styles.bloqueCeleste}>
               <Image source={Logo} style={styles.logo}/>
@@ -42,14 +61,14 @@ class Home extends React.Component {
           <View style={styles.bloqueEcopicker}>
             <Text style={{color: AZUL, fontSize: 32, fontWeight: 'bold'}}>Ecopicker</Text>
             <Image source={Moto} style={{alignSelf: 'center', marginVertical: 20}}/>
-            <TouchableOpacity style={{backgroundColor: AZUL, borderRadius: 25, width: '50%', alignSelf: 'center'}}>
+            <TouchableOpacity style={{backgroundColor: AZUL, borderRadius: 25, width: '50%', alignSelf: 'center'}} onPress={() => navigation.navigate('Searching') }>
               <Text style={{color: BLANCO, fontSize: 22, textAlign: 'center', padding: 10}}>Llamar</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.bloqueEcotiendas}>
             <View style={{flexDirection: 'row', flex: 1, justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 30, paddingBottom: 20}}>
               <Text style={{color: VERDE, fontSize: 32, fontWeight: 'bold'}}>Ecotiendas</Text>
-              <TouchableOpacity style={{backgroundColor: VERDE, borderRadius: 25, alignSelf: 'center'}}>
+              <TouchableOpacity style={{backgroundColor: VERDE, borderRadius: 25, alignSelf: 'center'}} onPress={() => navigation.navigate('Ecotiendas')}>
                 <Text style={{color: BLANCO, fontSize: 22, textAlign: 'center', paddingVertical: 10, paddingHorizontal: 20}}>Ver todas</Text>
               </TouchableOpacity>
             </View>
@@ -100,6 +119,48 @@ class Home extends React.Component {
             </View>
           </View>
         </ScrollView>
+        <View style={[styles.menu, {bottom: this.state.menuBottom}]}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
+            <Ionicons name="cog" size={36} color="rgba(0,0,0,.5)" style={{marginHorizontal: 40}}/>
+            <View style={{borderStyle: 'solid', borderColor: 'rgba(0,0,0,.5)', borderBottomWidth: 1, flexGrow: 1, marginRight: 40}}>
+              <Text style={{fontSize: 16, padding: 12 }}>
+                Editar perfil
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10}} onPress={() => navigation.navigate('Reportar')}>
+            <Ionicons name="ios-warning-outline" size={36} color="rgba(0,0,0,.5)" style={{marginHorizontal: 40}}/>
+            <View style={{borderStyle: 'solid', borderColor: 'rgba(0,0,0,.5)', borderBottomWidth: 1, flexGrow: 1, marginRight: 40}}>
+              <Text style={{fontSize: 16, padding: 12 }}>
+                Reportar un problema
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10}} onPress={() => navigation.navigate('Ayuda')}>
+            <Ionicons name="help-circle-outline" size={36} color="rgba(0,0,0,.5)" style={{marginHorizontal: 40}}/>
+            <View style={{borderStyle: 'solid', borderColor: 'rgba(0,0,0,.5)', borderBottomWidth: 1, flexGrow: 1, marginRight: 40}}>
+              <Text style={{fontSize: 16, padding: 12 }}>
+                Ayuda
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10}} onPress={() => navigation.navigate('TerminosCondiciones')}>
+            <Ionicons name="ios-information-circle-outline" size={36} color="rgba(0,0,0,.5)" style={{marginHorizontal: 40}}/>
+            <View style={{borderStyle: 'solid', borderColor: 'rgba(0,0,0,.5)', borderBottomWidth: 1, flexGrow: 1, marginRight: 40}}>
+              <Text style={{fontSize: 16, padding: 12 }}>
+                Términos y Condiciones
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10}} onPress={() => this.props.dispatch(unsetUser())}>
+            <Ionicons name="exit" size={36} color="rgba(0,0,0,.5)" style={{marginHorizontal: 40}}/>
+            <View style={{borderStyle: 'solid', borderColor: 'rgba(0,0,0,.5)', borderBottomWidth: 1, flexGrow: 1, marginRight: 40}}>
+              <Text style={{fontSize: 16, padding: 12 }}>
+                Salir
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     )
   }
@@ -112,7 +173,6 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0
   },
   navBar: {
-    flex: 1,
     alignItems: 'flex-end',
     paddingRight: 20,
     paddingVertical: 20,
@@ -156,6 +216,16 @@ const styles = StyleSheet.create({
   bloquePremios: {
     backgroundColor: AMARILLO,
     paddingVertical: 30,
+  },
+  menu: {
+    position: 'absolute', 
+    left: 0, 
+    right: 0, 
+    height: 300,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    paddingTop: 25,
+    backgroundColor: BLANCO
   }
 })
 

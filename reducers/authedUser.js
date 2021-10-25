@@ -1,4 +1,4 @@
-import { SET_USER } from "../actions/index"
+import { SET_USER, UNSET_USER } from "../actions/index"
 
 export default function authedUser(state = null, action){
   switch(action.type){
@@ -10,6 +10,8 @@ export default function authedUser(state = null, action){
         foto: action.foto,
         ecopuntos: action.ecopuntos
       }
+    case UNSET_USER:
+      return null
     default:
       return state
   }

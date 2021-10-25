@@ -1,11 +1,13 @@
 import React from "react";
-import { Text, View, ImageBackground, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { Text, View, ImageBackground, Image, StyleSheet, Platform } from "react-native";
 import { connect } from "react-redux";
+import MapView from 'react-native-maps';
 
 import { BLANCO, CELESTE, ROJO, VERDE } from '../../utils/colors'
 
 import Patron from '../../utils/images/patron.png'
 import Logo from '../../utils/images/LogoSinFondo.png'
+import { TouchableOpacity } from "react-native-gesture-handler";
 import { unsetReward } from "../../actions";
 
 class Confirmacion extends React.Component{
@@ -22,17 +24,39 @@ class Confirmacion extends React.Component{
               <Image source={Logo} style={styles.logo}/>
           </View>
           <View style={styles.bloqueBlanco}>
-            <Text style={{color: VERDE, fontSize: 36, fontWeight: 'bold'}}>¿Estás seguro?</Text>
-            {/* <Image></Image> */}
-            <Text style={{fontWeight: 'bold'}}>{rewards.name}</Text>
-            <Text style={{marginTop: 12}}>Se canjeará {rewards.ecopuntos} ecopuntos</Text>
-            <View style={{marginTop: 24, flexDirection: 'row', justifyContent: "space-around", width: "40%"}}>
-              <TouchableOpacity style={{backgroundColor: VERDE, paddingVertical: 8, paddingHorizontal: 20, borderRadius: 15}} onPress={this.enviarReward}>
-                <Text style={{color: BLANCO, textAlign: 'center'}}>Sí</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={{backgroundColor: ROJO, paddingVertical: 8, paddingHorizontal: 20, borderRadius: 15}} onPress={() => this.props.navigation.goBack()}>
-                <Text style={{color: BLANCO, textAlign: 'center'}}>No</Text>
-              </TouchableOpacity>
+            <View style={{alignItems: 'stretch'}}>
+              {Platform.OS !== 'ios'
+                ? <Text 
+                    style={{
+                      color: BLANCO, 
+                      fontSize: 24, 
+                      fontWeight: 'bold', 
+                      backgroundColor: VERDE, 
+                      lineHeight: 60,
+                      borderTopLeftRadius: 40,
+                      borderTopRightRadius: 40,
+                      textAlign: 'center'
+                  }}>
+                    Ecotiendas
+                  </Text>
+                : <View 
+                    style={{
+                      backgroundColor: VERDE,
+                      height: 60,
+                      borderTopLeftRadius: 40,
+                      borderTopRightRadius: 40,
+                  }}/>
+              }
+            </View>
+            <View style={{flex: 1, width: '100%'}}>
+            <MapView
+              initialRegion={{
+                latitude: 37.78825,
+                longitude: -122.4324,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              }}
+            />
             </View>
           </View>
         </ImageBackground>
@@ -57,9 +81,12 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     flex: 1, 
-    justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'stretch'
   },
+  map: {
+    height: '100%',
+    width: '100%'
+  }
 })
 
 function mapStateToProps({rewards}){

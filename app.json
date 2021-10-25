@@ -5,7 +5,15 @@
     "version": "1.0.0",
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "userInterfaceStyle": "automatic"
   },
-  "name": "Ecotiendas-app"
+  "name": "Ecotiendas-app",
+  "android":{
+    "config":{
+      "googleMaps":{
+        "apiKey": "AIzaSyBXkQpabGQPYgZRGqNiyjQrzKf_o_C5S6o"
+      }
+    }
+  }
 }
