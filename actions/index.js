@@ -4,10 +4,19 @@ export const UNSET_USER = 'UNSET_USER'
 export const SET_REWARD = 'SET_REWARD'
 export const UNSET_REWARD = 'UNSET_REWARD'
 
-export function setUser (id, rank, name, foto, ecopuntos) {
+export const TOGGLE_LOADING = 'TOGGLE_LOADING'
+
+export function toggleLoading(loading) {
+  return {
+    type: TOGGLE_LOADING,
+    loading: !loading
+  }
+}
+
+export function setUser (cedula, direccion, genero, correo, telefono, fecha_nacimiento, rango, id, nombre, apellido, ecopuntos, foto) {
   return {
     type: SET_USER,
-    id, rank, name, foto, ecopuntos
+    cedula, direccion, genero, correo, telefono, fecha_nacimiento, rango, id, nombre, apellido, ecopuntos, foto
   }
 }
 

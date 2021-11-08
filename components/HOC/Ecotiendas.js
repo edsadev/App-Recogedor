@@ -1,26 +1,51 @@
-import React from "react";
-import { Text, View, ImageBackground, Image, StyleSheet, Platform } from "react-native";
-import { connect } from "react-redux";
-import MapView, {Marker} from 'react-native-maps';
+import React from "react"
+import { Text, View, ImageBackground, Image, StyleSheet, Platform, StatusBar, Alert, TouchableOpacity } from "react-native"
+import { connect } from "react-redux"
+import MapView, {Marker} from 'react-native-maps'
+import * as Location from 'expo-location'
 
 import { BLANCO, CELESTE, ROJO, VERDE } from '../../utils/colors'
 
 import Patron from '../../utils/images/patron.png'
 import Logo from '../../utils/images/LogoSinFondo.png'
 import Marcador from '../../utils/images/Marcador.png'
-import { TouchableOpacity } from "react-native-gesture-handler";
-import { unsetReward } from "../../actions";
 
-class Confirmacion extends React.Component{
-  enviarReward = () => {
-    this.props.dispatch(unsetReward())
-    this.props.navigation.navigate('Mensaje', {mensaje: 'Transacción realizada con éxito'})
+import { toggleLoading } from "../../actions"
+
+import Loading from "../UI/Loading";
+
+class Ecotiendas extends React.Component{
+  state={
+    location: null,
+  }
+  componentDidMount(){
+    this.props.dispatch(toggleLoading())
+    try {
+      (async() => {
+        let status = await Location.requestForegroundPermissionsAsync()
+        if (status.status !== 'granted') {
+          Alert.alert('Otorga permisos de ubicación a la aplicación')
+          return;
+        }
+        let location = await Location.getCurrentPositionAsync();
+        this.setState(() => ({
+          location: location
+        }))
+        this.props.dispatch(toggleLoading())
+      })()
+    } catch {
+      console.log(new Error('Hubo un error al cargar la location'))
+      this.props.dispatch(toggleLoading())
+    }
   }
   render(){
-    const {rewards} = this.props
+    const {loading} = this.props
     return(
       <View style={{flex: 1}}>
         <ImageBackground source={Patron} style={{width: '100%', height: '100%', backgroundColor: CELESTE}}>
+          {Platform.OS === 'ios' && <StatusBar 
+            barStyle={'dark-content'}
+          />}
           <View style={[styles.bloqueCeleste]}>
               <Image source={Logo} style={styles.logo}/>
           </View>
@@ -50,24 +75,27 @@ class Confirmacion extends React.Component{
               }
             </View>
             <View style={{flex: 1, width: '100%'}}>
-              <MapView 
-                style={styles.map} 
-                initialRegion={{
-                  latitude: -2.161072,
-                  longitude: -79.889475,
-                  latitudeDelta: 0.0922,
-                  longitudeDelta: 0.0421,
-                }}
-              >
-                <Marker
-                  key={0}
-                  coordinate={{ latitude : -2.161072 , longitude : -79.889475 }}
-                  title={"Ecotienda"}
-                  description={"Ecotienda de sauces"}
-                  image={Marcador}
+              {this.state.location && loading 
+              ? <MapView 
+                  style={styles.map} 
+                  initialRegion={{
+                    latitude: this.state.location && this.state.location.coords.latitude,
+                    longitude: this.state.location && this.state.location.coords.longitude,
+                    latitudeDelta: 0.0922,
+                    longitudeDelta: 0.0421,
+                  }}
                 >
-                </Marker>
-              </MapView>
+                  <Marker
+                    key={0}
+                    coordinate={{ latitude : -2.161072 , longitude : -79.889475 }}
+                    title={"Ecotienda"}
+                    description={"Ecotienda de sauces"}
+                    image={Marcador}
+                  >
+                  </Marker>
+                </MapView>
+              : <Loading />
+              }
             </View>
           </View>
         </ImageBackground>
@@ -100,10 +128,10 @@ const styles = StyleSheet.create({
   }
 })
 
-function mapStateToProps({rewards}){
+function mapStateToProps({loading}){
   return {
-    rewards
+    loading
   }
 }
 
-export default connect(mapStateToProps)(Confirmacion)
+export default connect(mapStateToProps)(Ecotiendas)

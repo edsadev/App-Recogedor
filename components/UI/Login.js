@@ -1,28 +1,36 @@
 import React from 'react'
-import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, SafeAreaView} from 'react-native'
+import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, SafeAreaView, StatusBar} from 'react-native'
 
 import Hojas2 from '../../utils/images/Hojas_2.png'
 
 import { VERDE, BLANCO } from '../../utils/colors.js'
 import { connect } from 'react-redux'
 
+import { loginApp, API } from '../../utils/api'
 import { setUser } from '../../actions'
 
 class Login extends React.Component{
-  login = () => {
-    if (this.correo === "esala.094@gmail.com" && this.contraseña === "123456"){
-      this.props.dispatch(setUser(1, 'ecoamigo', 'Edmundo', undefined, 1000))
-    } else {
-      Alert.alert('Hubo un error al iniciar sesión')
-    }
+  login = async () => {
+    await loginApp(this.correo, this.contraseña)
+      .then(res => {
+        console.log(res.data)
+        const data = res.data
+        this.props.dispatch(setUser(data.cedula, data.direccion, data.genero, data.correo, data.telefono, data.fecha_nacimiento, data.rango, data.id, data.nombre, data.apellido, data.ecopuntos, data.foto))
+      })
+      .catch(error => {
+        alert('Hubo un error al iniciar sesión')
+        console.error(error, API)
+      })
   }
   check = () => {
-    debugger
     console.log(this.correo, this.contraseña)
   }
   render(){
     return (
       <SafeAreaView style={styles.container}>
+        {Platform.OS === 'ios' && <StatusBar 
+          barStyle={'dark-content'}
+        />}
         <View style={styles.formulario}>
           <Text style={styles.subtitle}>Iniciar sesión</Text>
           <Text style={styles.label}>Correo electrónico</Text>

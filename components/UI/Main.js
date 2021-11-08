@@ -1,5 +1,5 @@
 import React from 'react'
-import {View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView, Platform } from 'react-native'
+import {Text, StyleSheet, Image, TouchableOpacity, SafeAreaView, StatusBar} from 'react-native'
 
 import Logo from '../../utils/images/Logo.png'
 import Fondo from '../../utils/images/Mancha.png'

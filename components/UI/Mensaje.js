@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { Text, View, StyleSheet, ImageBackground, Image, Animated } from "react-native";
+import { Text, View, StyleSheet, ImageBackground, Image, Animated, StatusBar, SafeAreaView } from "react-native";
 
 import Patron from '../../utils/images/patron.png'
 import Logo from '../../utils/images/LogoSinFondo.png'
@@ -15,7 +15,7 @@ const FadeInView = (props) => {
       fadeAnim,
       {
         toValue: 1,
-        duration: 1300,
+        duration: 1500,
         useNativeDriver: true
       }
     ).start();
@@ -37,11 +37,11 @@ export default class Mensaje extends React.Component{
   componentDidMount(){
     setTimeout(() => {
       this.props.navigation.popToTop()
-    }, 1500);
+    }, 3500);
   }
   render(){
     return(
-      <View style={{flex: 1}}>
+      <SafeAreaView style={styles.AndroidSafeArea}>
         <ImageBackground source={Patron} style={{width: '100%', height: '100%', backgroundColor: CELESTE}}>
           <View style={[styles.bloqueCeleste]}>
               <Image source={Logo} style={styles.logo}/>
@@ -49,15 +49,20 @@ export default class Mensaje extends React.Component{
           <View style={styles.bloqueBlanco}>
             <Text style={{color: VERDE, fontSize: 36, fontWeight: 'bold'}}>¡Gracias!</Text>
             <FadeInView />
-            <Text style={{marginTop: 12, fontSize: 24}}>{this.props.route.params.mensaje}</Text>
+            <Text style={{marginTop: 12, fontSize: 24, textAlign: 'center', marginHorizontal: 20}}>{this.props.route.params.mensaje}</Text>
           </View>
         </ImageBackground>
-      </View>
+      </SafeAreaView>
     )
   }
 }
 
 const styles = StyleSheet.create({
+  AndroidSafeArea: {
+    flex: 1,
+    backgroundColor: "white",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
   logo: {
     height: 60,
     width: 60,

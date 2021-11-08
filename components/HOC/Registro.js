@@ -1,22 +1,26 @@
 import React, {useState} from 'react'
-import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, Platform} from 'react-native'
+import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, Platform, StatusBar} from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import {Picker} from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-
 
 import DefaultUser from '../../utils/images/DefaultUser.png'
 
 import { VERDE, BLANCO } from '../../utils/colors.js'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-export default class Login extends React.Component{
+import { _validateContra, _validateEmail } from '../../utils/helpers';
+import { registerApp } from '../../utils/api';
+
+export default class Register extends React.Component{
   state = {
     image: null,
     genero: 'masculino',
     date: new Date(),
-    showDate: false
+    showDate: false,
+    email: '',
+    isEmail: false
   }
   pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -24,14 +28,12 @@ export default class Login extends React.Component{
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
-      base64: true,
+      base64: true
     });
-
     console.log(result)
-
     if (!result.cancelled) {
       this.setState(() => ({
-        image: result.uri
+        image: result
       }))
     }
   }
@@ -65,13 +67,35 @@ export default class Login extends React.Component{
       showDate: false
     }))
   }
+  handleRegister = () => {
+    if (this.state.isEmail){
+      if(_validateContra(this.contra, this.contra2)){
+        registerApp (this.cedula, this.nombre, this.apellido, this.direccion, this.state.genero, this.state.email, this.celular, this.state.date, this.state.email, this.contra, 1, this.state.image.base64)
+          .then(res => {
+            console.log(res)
+            this.props.navigation.goBack()
+          })
+          .catch(error => {
+            alert('Hubo un error al tratar de registrarse')
+            console.error(error)
+          })
+      } else {
+        alert('Las contraseñas no coinciden')
+      }
+    } else {
+      alert('El correo electrónico es incorrecto')
+    }
+  }
   render(){
     const {image, date, showDate} = this.state
     return (
       <SafeAreaView style={styles.container}>
+        {Platform.OS === 'ios' && <StatusBar 
+          barStyle={'dark-content'}
+        />}
         <ScrollView style={styles.formulario}>
           <Text style={styles.subtitle}>Registrarse</Text>
-          {image && <Image source={{ uri: image }} style={styles.avatar} />}
+          {image && <Image source={{ uri: image.uri }} style={styles.avatar} />}
           {!image && <Image source={DefaultUser} style={styles.avatar} />}
           <TouchableOpacity onPress={this.pickImage}>
             <Text style={{color: VERDE, textAlign: 'center', paddingTop: 15, paddingBottom: 25}}>Agregar imagen</Text>
@@ -79,45 +103,76 @@ export default class Login extends React.Component{
           <View style={styles.formRow}>
             <View style={styles.formRow1}>
               <Text style={styles.label}>Nombre</Text>
-              <TextInput style={styles.input}/>
+              <TextInput 
+                style={styles.input}
+                onChangeText={text => this.nombre = text}
+              />
             </View>
             <View style={styles.formRow2}>
               <Text style={styles.label}>Apellido</Text>
-              <TextInput style={styles.input}/>
+              <TextInput 
+                style={styles.input}
+                onChangeText={text => this.apellido = text}
+              />
             </View>
           </View>
           <View style={styles.formRow}>
             <View style={styles.formRow1}>
               <Text style={styles.label}>Número de cédula</Text>
-              <TextInput style={styles.input}/>
+              <TextInput 
+                style={styles.input}
+                onChangeText={text => this.cedula = text}
+                maxLength={10}
+              />
             </View>
             <View style={styles.formRow2}>
               <Text style={styles.label}>Número de celular</Text>
-              <TextInput style={styles.input}/>
+              <TextInput 
+                style={styles.input}
+                onChangeText={text => this.celular = text}
+              />
             </View>
           </View>
           <View style={styles.formRow}>
             <View style={styles.formRow1}>
               <Text style={styles.label}>Correo electrónico</Text>
-              <TextInput style={styles.input}/>
+              <TextInput 
+                style={styles.input}
+                onChangeText={(text) => _validateEmail(text, (data) => {
+                  this.setState(() => ({
+                    email: data.email,
+                    isEmail: data.isEmail
+                  }))
+                })}
+                value={this.state.email}
+              />
             </View>
           </View>
           <View style={styles.formRow}>
             <View style={styles.formRow1}>
               <Text style={styles.label}>Contraseña</Text>
-              <TextInput style={styles.input}/>
+              <TextInput 
+                style={styles.input}
+                onChangeText={text => this.contra = text}
+              />
             </View>
           </View>
           <View style={styles.formRow}>
             <View style={styles.formRow1}>
               <Text style={styles.label}>Confirmar contraseña</Text>
-              <TextInput style={styles.input}/>
+              <TextInput 
+                style={styles.input}
+                onChangeText={text => this.contra2 = text}
+              />
             </View>
           </View>
           <View style={styles.formRow}>
             <View style={styles.formRow1}>
               <Text style={styles.label}>Dirección de domicilio</Text>
-              <TextInput style={styles.input}/>
+              <TextInput 
+                style={styles.input}
+                onChangeText={text => this.direccion = text}
+              />
             </View>
           </View>
           <View style={styles.formRow}>
@@ -186,7 +241,7 @@ export default class Login extends React.Component{
             </View>
           </View>
           <Text style={[{color: VERDE, paddingHorizontal: 40, marginBottom: 20}]}>Al registrarte aceptas los términos y condiciones</Text>
-          <TouchableOpacity style={styles.boton} onPress={this.review}>
+          <TouchableOpacity style={styles.boton} onPress={this.handleRegister}>
             <Text style={{color: BLANCO}}>Registrar</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.boton, {backgroundColor: BLANCO, marginBottom: 50}]}>

@@ -3,7 +3,6 @@ import { View, Text, TouchableWithoutFeedback, StyleSheet, SafeAreaView, ScrollV
 import { connect } from 'react-redux'
 import { Feather } from '@expo/vector-icons';
 
-import { FontAwesome } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 
 import Patron from '../../utils/images/patron.png'
@@ -25,20 +24,24 @@ import { CELESTE, BLANCO, VERDE, AZUL, CELESTEOSCURO, AMARILLO, NARANJA } from '
 
 class Home extends React.Component {
   state = {
-    menuBottom: -300
+    menuBottom: -1000
   }
   handleMenu = () => {
     LayoutAnimation.easeInEaseOut()
     this.setState(() => (
       this.state.menuBottom === 0
-        ? {menuBottom: -300}
+        ? {menuBottom: -1000}
         : {menuBottom: 0}
     ))
   }
   render(){
     const { authedUser, navigation } = this.props
+    const base64Image = `data:image/png;base64,${authedUser.foto}`
     return (
       <SafeAreaView style={[styles.AndroidSafeArea]}>
+        {Platform.OS === 'ios' && <StatusBar 
+          barStyle={'dark-content'}
+        />}
         <View style={styles.navBar}>
           <TouchableWithoutFeedback accessibilityRole={'menu'} onPress={this.handleMenu}>
             <Feather name="settings" size={32} color="black" />
@@ -51,8 +54,10 @@ class Home extends React.Component {
             </ImageBackground>
             <View style={styles.bloqueBlanco}>
               <View style={styles.info}>
-                <Image source={DefaultUser} style={styles.avatar}/>
-                <Text style={{color: VERDE, fontSize: 20}}>{authedUser.name}</Text>
+                <View style={{shadowColor: '#000', shadowOffset: { width: -3, height: 3 }, shadowOpacity: 0.15, shadowRadius: 3, }}>
+                  <Image source={authedUser.foto === '' ? DefaultUser : {uri: base64Image}} style={styles.avatar}/>
+                </View>
+                <Text style={{color: VERDE, fontSize: 20}}>{authedUser.nombre} {authedUser.apellido}</Text>
                 <Text style={{color: VERDE, fontSize: 22}}>{authedUser.ecopuntos}</Text>
                 <Text>Ecopuntos</Text>
               </View>
@@ -120,7 +125,7 @@ class Home extends React.Component {
           </View>
         </ScrollView>
         <View style={[styles.menu, {bottom: this.state.menuBottom}]}>
-          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10}} onPress={() => navigation.navigate('EditarPerfil')}>
             <Ionicons name="cog" size={36} color="rgba(0,0,0,.5)" style={{marginHorizontal: 40}}/>
             <View style={{borderStyle: 'solid', borderColor: 'rgba(0,0,0,.5)', borderBottomWidth: 1, flexGrow: 1, marginRight: 40}}>
               <Text style={{fontSize: 16, padding: 12 }}>
@@ -202,7 +207,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 20,
-    marginBottom: 20,
+    marginBottom: 20, 
   },
   bloqueEcopicker: {
     backgroundColor: CELESTEOSCURO,
@@ -221,10 +226,9 @@ const styles = StyleSheet.create({
     position: 'absolute', 
     left: 0, 
     right: 0, 
-    height: 300,
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
-    paddingTop: 25,
+    paddingVertical: 25,
     backgroundColor: BLANCO
   }
 })
