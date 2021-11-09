@@ -9,7 +9,6 @@ export const _validateEmail = (text, cb) => {
 }
 export const _validateContra = (contra, newContra) => {
   if (contra !== newContra){
-    Alert.alert('Las contraseñas no coinciden')
     return false
   } else {
     return true

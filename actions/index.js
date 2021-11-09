@@ -1,5 +1,7 @@
 export const SET_USER = 'SET_USER'
 export const UNSET_USER = 'UNSET_USER'
+export const UPDATE_EMAIL = 'UPDATE_EMAIL'
+export const UPDATE_USERINFO = 'UPDATE_USERINFO'
 
 export const SET_REWARD = 'SET_REWARD'
 export const UNSET_REWARD = 'UNSET_REWARD'
@@ -23,6 +25,21 @@ export function setUser (cedula, direccion, genero, correo, telefono, fecha_naci
 export function unsetUser () {
   return {
     type: UNSET_USER,
+  }
+}
+
+export function updateEmail(correo){
+  return {
+    type: UPDATE_EMAIL,
+    correo
+  }
+}
+
+export function updateUserInfo(nombre, apellido, telefono, direccion, fecha_nacimiento, genero, foto){
+  console.log(nombre, apellido, telefono, direccion, fecha_nacimiento, genero, foto)
+  return {
+    type: UPDATE_USERINFO,
+    nombre, apellido, telefono, direccion, fecha_nacimiento, genero, foto
   }
 }
 

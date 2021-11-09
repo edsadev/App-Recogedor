@@ -33,3 +33,43 @@ export function registerApp (cedula, nombre, apellido, direccion, genero, correo
     }
   })
 }
+
+export function updateCorreo(id, correo){
+  return axios({
+    method: 'post',
+    url: `${API}correo-update`,
+    data: {
+      id,
+      correo
+    }
+  })
+}
+
+export function updateContra(nueva_contrasena, vieja_contrasena, id){
+  return axios({
+    method: 'post',
+    url: `${API}contrasena-update`,
+    data: {
+      nueva_contrasena,
+      vieja_contrasena,
+      id
+    }
+  })
+}
+
+export function updateUser(id, nombre, apellido, direccion, genero, celular, fecha_nacimiento, foto){
+  return axios({
+    method: 'post',
+    url: `${API}eco-amigos-update`,
+    data: {
+      id,
+      nombre,
+      apellido,
+      direccion,
+      genero,
+      celular,
+      fecha_nacimiento,
+      foto,
+    }
+  })
+}

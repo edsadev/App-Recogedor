@@ -9,10 +9,14 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import DefaultUser from '../../utils/images/DefaultUser.png'
 import Separador from '../../utils/images/Separador.png'
 
-import { VERDE, BLANCO, CELESTE } from '../../utils/colors.js'
+import { VERDE, BLANCO, CELESTE, GRAY } from '../../utils/colors.js'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { _validateContra, _validateEmail } from '../../utils/helpers';
+import { connect } from 'react-redux';
+import { updateContra, updateCorreo, updateUser } from '../../utils/api';
+import { toggleLoading, updateEmail, updateUserInfo } from '../../actions';
+import Loading from '../UI/Loading';
 
 const { UIManager } = NativeModules;
 
@@ -22,16 +26,38 @@ if (Platform.OS === 'android') {
   }
 }
 
-export default class Login extends React.Component{
+class EditarPerfil extends React.Component{
   state = {
     image: null,
-    genero: 'masculino',
-    date: new Date('07/31/1999'),
+    genero: null,
+    date: new Date(),
     showDate: false,
     bloqueCorreo: false,
     bloqueContra: false,
     email: '',
-    isEmail: false
+    isEmail: false,
+    nombre: '',
+    apellido: '',
+    direccion: '',
+    telefono: '',
+    cambios: false,
+  }
+  componentDidMount(){
+    const { authedUser } = this.props
+    this.setState(() => ({
+      image: `data:image/png;base64,${authedUser.foto}`,
+      date: new Date(authedUser.fecha_nacimiento),
+      genero: authedUser.genero,
+      nombre: authedUser.nombre,
+      direccion: authedUser.direccion,
+      telefono: authedUser.telefono,
+      apellido: authedUser.apellido,
+    }))
+    
+    // Inicializo las variables para no tener errores dentro de los if statement
+    this.newContra = ''
+    this.newContra2 = ''
+    this.antiguaContra = ''
   }
   pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -42,11 +68,10 @@ export default class Login extends React.Component{
       base64: true,
     });
 
-    console.log(result)
-
     if (!result.cancelled) {
       this.setState(() => ({
-        image: result.uri
+        image: `data:image/png;base64,${result.base64}`,
+        cambios: true
       }))
     }
   }
@@ -68,7 +93,8 @@ export default class Login extends React.Component{
   }
   handleChangeGender = (e) => {
     this.setState(() => ({
-      genero: e
+      genero: e,
+      cambios: true
     }))
   }
   showDatePicker = () => {
@@ -84,25 +110,96 @@ export default class Login extends React.Component{
   handleChangeDateIOS = (value) => {
     this.setState(() => ({
       date: value,
-      showDate: false
+      showDate: false,
+      cambios: true,
     }))
   }
   handleChangeDateAndroid = (e, value) => {
     this.setState(() => ({
       date: value,
-      showDate: false
+      showDate: false,
+      cambios: true,
     }))
   }
   handleChangeEmail = () => {
-    if (this.state.isEmail){
-      this.props.navigation.navigate('Mensaje', {mensaje: 'Se ha enviado un correo de confirmación al nuevo correo'})
+    if (this.state.isEmail) {
+      updateCorreo(this.props.authedUser.id, this.state.email.toLowerCase())
+        .then(res => {
+          if(res.data.success === false){
+            alert(res.data.mensaje)
+          } else {
+            this.props.dispatch(updateEmail(this.state.email.toLowerCase()))
+            this.props.navigation.navigate('Mensaje', {mensaje: res.data.mensaje})
+          }
+        })
+        .catch(err => {
+          alert('Hubo un error al tratar de actualizar el correo')
+          console.error(err)
+        })
     } else {
-      Alert.alert('El correo ingresado no es correcto, revisa nuevamente')
+      alert('El correo ingresado no es correcto')
     }
   }
-  handleChangeContra = (contra, newContra) => {
-    if(_validateContra(contra, newContra)){
-      this.props.navigation.navigate('Mensaje', {mensaje: 'Se ha enviado un correo de confirmación a tu correo'})
+  handleChangeContra = () => {
+    this.props.dispatch(toggleLoading(this.props.loading))
+    if(this.antiguaContra.length > 0){
+      if(this.newContra.length > 0){
+        if(this.newContra2.length > 0){
+          if(_validateContra(this.newContra, this.newContra2)){
+            updateContra(this.newContra, this.antiguaContra, this.props.authedUser.id)
+              .then(res => {
+                this.props.dispatch(toggleLoading(this.props.loading))
+                if(res.data.success === false){
+                  alert(res.data.mensaje)
+                } else {
+                  this.props.navigation.navigate('Mensaje', {mensaje: res.data.mensaje})
+                }
+              })
+              .catch(err => {
+                alert('Hubo un error al tratar de actualizar tu contraseña')
+                this.props.dispatch(toggleLoading(this.props.loading))
+                console.error(err)
+              })
+          } else {
+            alert('Las contraseñas no coinciden')
+            this.props.dispatch(toggleLoading(this.props.loading))
+          }
+        } else {
+          alert('Escribe nuevamente tu nueva contraseña')
+          this.props.dispatch(toggleLoading(this.props.loading))
+        }
+      } else {
+        alert('Escribe tu nueva contraseña')
+        this.props.dispatch(toggleLoading(this.props.loading))
+      }
+    } else {
+      alert('Escribe tu antigua contraseña')
+      this.props.dispatch(toggleLoading(this.props.loading))
+    }
+  }
+  handleChanges = () => {
+    const {nombre, apellido, direccion, genero, telefono, date, image} = this.state
+    const {id} = this.props.authedUser
+    this.props.dispatch(toggleLoading(this.props.loading))
+    if(this.state.cambios){
+      updateUser(id, nombre, apellido, direccion, genero, telefono, date, image.split('/png;base64,')[1])
+        .then(res => {
+          this.props.dispatch(toggleLoading(this.props.loading))
+          if(res.data.success === false){
+            alert(res.data.mensaje)
+          } else {
+            this.props.dispatch(updateUserInfo(nombre, apellido, telefono, direccion, date, genero, image.split('/png;base64,')[1]))
+            this.props.navigation.navigate('Mensaje', {mensaje: res.data.mensaje})
+          }
+        })
+        .catch(err => {
+          alert('Hubo un error al tratar de actualizar tu información')
+          this.props.dispatch(toggleLoading(this.props.loading))
+          console.error(err)
+        })
+    } else {
+      alert('No se han encontrados cambios en tu información')
+      this.props.dispatch(toggleLoading(this.props.loading))
     }
   }
   render(){
@@ -112,192 +209,221 @@ export default class Login extends React.Component{
         {Platform.OS === 'ios' && <StatusBar 
           barStyle={'dark-content'}
         />}
-        <ScrollView style={styles.formulario}>
-          {image && <Image source={{ uri: image }} style={styles.avatar} />}
-          {!image && <Image source={DefaultUser} style={styles.avatar} />}
-          <TouchableOpacity onPress={this.pickImage}>
-            <Text style={{color: VERDE, textAlign: 'center', paddingTop: 15, paddingBottom: 25}}>Cambiar imagen</Text>
-          </TouchableOpacity>
-          <View style={styles.formRow}>
-            <View style={[styles.formRow1, {flexDirection: 'row', flex: 1, alignItems: 'center', justifyContent: 'space-between'}]}>
-              <Text style={[styles.label, {flex: 1}]}>Correo electrónico</Text>
-              <TouchableOpacity style={[styles.input, {flex: 1, backgroundColor: VERDE}]} onPress={() => this.handleBloque('BloqueCorreo')}>
-                <Text style={{padding: 5, textAlign: 'center', color: BLANCO}}>Cambiar correo</Text>
+        {this.props.loading
+          ? <Loading />
+          : <ScrollView style={styles.formulario}>
+              {image && <Image source={{ uri: image }} style={styles.avatar} />}
+              {!image && <Image source={DefaultUser} style={styles.avatar} />}
+              <TouchableOpacity onPress={this.pickImage}>
+                <Text style={{color: VERDE, textAlign: 'center', paddingTop: 15, paddingBottom: 25}}>Cambiar imagen</Text>
               </TouchableOpacity>
-            </View>
-          </View>
-          {this.state.bloqueCorreo && 
-            <View style={[{backgroundColor: BLANCO, marginHorizontal: 20, borderRadius: 20, paddingVertical: 20, marginVertical: 20}, this.state.bloqueCorreo]}>
               <View style={styles.formRow}>
-                <View style={styles.formRow1}>
-                  <Text style={styles.label}>Correo actual</Text>
-                  <TextInput style={styles.innerBloqueInput} editable={false} value={'esala.094@gmail.com'}/>
+                <View style={[styles.formRow1, {flexDirection: 'row', flex: 1, alignItems: 'center', justifyContent: 'space-between'}]}>
+                  <Text style={[styles.label, {flex: 1}]}>Correo electrónico</Text>
+                  <TouchableOpacity style={[styles.input, {flex: 1, backgroundColor: VERDE}]} onPress={() => this.handleBloque('BloqueCorreo')}>
+                    <Text style={{padding: 5, textAlign: 'center', color: BLANCO}}>Cambiar correo</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-              <View style={styles.formRow}>
-                <View style={styles.formRow1}>
-                  <Text style={styles.label}>Nuevo correo</Text>
-                  <TextInput 
-                    style={styles.innerBloqueInput}
-                    onChangeText={(text) => _validateEmail(text, (data) => {
-                      this.setState(() => ({
-                        email: data.email,
-                        isEmail: data.isEmail
-                      }))
-                    })}
-                    value={this.state.email}
-                  />
-                </View>
-              </View>
-              <TouchableOpacity style={[styles.input, {backgroundColor: VERDE, marginHorizontal: 40}]} onPress={this.handleChangeEmail}>
-                <Text style={{padding: 5, textAlign: 'center', color: BLANCO}}>Guardar cambio</Text>
-              </TouchableOpacity>
-            </View>
-          }
-          <View style={styles.formRow}>
-            <View style={[styles.formRow1, {flexDirection: 'row', flex: 1, alignItems: 'center', justifyContent: 'space-between'}]}>
-              <Text style={[styles.label, {flex: 1}]}>Contraseña</Text>
-              <TouchableOpacity style={[styles.input, {flex: 1, backgroundColor: VERDE}]} onPress={() => this.handleBloque('BloqueContra')}>
-                <Text style={{padding: 5, textAlign: 'center', color: BLANCO}}>Cambiar contraseña</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          {this.state.bloqueContra && 
-            <View style={[{backgroundColor: BLANCO, marginHorizontal: 20, borderRadius: 20, paddingVertical: 20, marginVertical: 20}, this.state.bloqueCorreo]}>
-              <View style={styles.formRow}>
-                <View style={styles.formRow1}>
-                  <Text style={styles.label}>Ingresa tu contraseña actual</Text>
-                  <TextInput 
-                    style={styles.innerBloqueInput}
-                    onChangeText={(antiguaContra) => this.antiguaContra = antiguaContra}
-                    secureTextEntry={true}
-                  />
-                </View>
-              </View>
-              <View style={styles.formRow}>
-                <View style={styles.formRow1}>
-                  <Text style={styles.label}>Ingresa tu nueva contraseña</Text>
-                  <TextInput 
-                    style={styles.innerBloqueInput}
-                    onChangeText={(newContra) => this.newContra = newContra}
-                    secureTextEntry={true}
-                  />
-                </View>
-              </View>
-              <View style={styles.formRow}>
-                <View style={styles.formRow1}>
-                  <Text style={styles.label}>Ingresa nuevamente tu nueva contraseña</Text>
-                  <TextInput 
-                    style={styles.innerBloqueInput}
-                    onChangeText={(newContra2) => this.newContra2 = newContra2}
-                    secureTextEntry={true}
-                  />
-                </View>
-              </View>
-              <TouchableOpacity style={[styles.input, {backgroundColor: VERDE, marginHorizontal: 40}]} onPress={() => this.handleChangeContra(this.newContra, this.newContra2)}>
-                <Text style={{padding: 5, textAlign: 'center', color: BLANCO}}>Guardar cambio</Text>
-              </TouchableOpacity>
-            </View>
-          }
-          <View style={styles.formRow}>
-            <Image source={Separador} resizeMode={'stretch'} style={{width: '100%'}}/>
-          </View>
-          <View style={styles.formRow}>
-            <View style={styles.formRow1}>
-              <Text style={styles.label}>Nombre</Text>
-              <TextInput style={styles.input}/>
-            </View>
-            <View style={styles.formRow2}>
-              <Text style={styles.label}>Apellido</Text>
-              <TextInput style={styles.input}/>
-            </View>
-          </View>
-          <View style={styles.formRow}>
-            <View style={styles.formRow1}>
-              <Text style={styles.label}>Número de celular</Text>
-              <TextInput style={styles.input}/>
-            </View>
-          </View>
-          <View style={styles.formRow}>
-            <View style={styles.formRow1}>
-              <Text style={styles.label}>Dirección de domicilio</Text>
-              <TextInput style={styles.input}/>
-            </View>
-          </View>
-          <View style={styles.formRow}>
-            <View style={styles.formRow1}>
-              <View>
-                {Platform.OS === 'ios'
-                  ? <View>
-                      <Text style={styles.label}>Fecha de nacimiento</Text>
-                      <View style={[styles.input, {paddingVertical: 0, paddingHorizontal: 0, flexDirection: 'row', alignItems: 'center', flex: 1}]}>
-                        <TouchableOpacity style={[styles.boton, {paddingHorizontal: 20, marginVertical: 0}]} onPress={this.showDatePicker}>
-                          <Text style={{color: BLANCO}}>Seleccionar fecha</Text>
-                        </TouchableOpacity>
-                        <Text style={{flex: 1, textAlign: 'center'}}>
-                          {date 
-                            ? `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}` 
-                            : `${(new Date()).getDate()}/${(new Date()).getMonth()+1}/${(new Date()).getFullYear()}`
-                          }
-                        </Text>  
-                      </View>
-                      <DateTimePickerModal
-                        isVisible={showDate}
-                        mode="date"
-                        onConfirm={this.handleChangeDateIOS}
-                        onCancel={this.hideDatePicker}
+              {this.state.bloqueCorreo && 
+                <View style={[{backgroundColor: BLANCO, marginHorizontal: 20, borderRadius: 20, paddingVertical: 20, marginVertical: 20}, this.state.bloqueCorreo]}>
+                  <View style={styles.formRow}>
+                    <View style={styles.formRow1}>
+                      <Text style={styles.label}>Correo actual</Text>
+                      <TextInput style={[styles.innerBloqueInput, {color: GRAY}]} editable={false} value={this.props.authedUser.correo}/>
+                    </View>
+                  </View>
+                  <View style={styles.formRow}>
+                    <View style={styles.formRow1}>
+                      <Text style={styles.label}>Nuevo correo</Text>
+                      <TextInput 
+                        style={styles.innerBloqueInput}
+                        onChangeText={(text) => _validateEmail(text, (data) => {
+                          this.setState(() => ({
+                            email: data.email,
+                            isEmail: data.isEmail
+                          }))
+                        })}
+                        value={this.state.email}
                       />
                     </View>
-                  : <View>
-                      <Text style={styles.label}>Fecha de nacimiento</Text>
-                      <TouchableOpacity style={styles.input} editable={true} onPress={this.showDatePicker}>
-                        <Text style={{color: "#000", paddingVertical: 8, textAlign: 'center'}}>
-                          {date 
-                            ? `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}` 
-                            : `${(new Date()).getDate()}/${(new Date()).getMonth()+1}/${(new Date()).getFullYear()}`
-                          }
-                        </Text>
-                        {showDate && (
-                          <DateTimePicker 
-                            testID="dateTimePicker"
-                            value={date ? date : new Date()}
-                            mode={'date'}
-                            display="default"
-                            is24Hour={true}
-                            onChange={this.handleChangeDateAndroid}
-                          />
-                        )}
-                      </TouchableOpacity>
                   </View>
-                }
+                  <TouchableOpacity style={[styles.input, {backgroundColor: VERDE, marginHorizontal: 40}]} onPress={this.handleChangeEmail}>
+                    <Text style={{padding: 5, textAlign: 'center', color: BLANCO}}>Guardar cambio</Text>
+                  </TouchableOpacity>
+                </View>
+              }
+              <View style={styles.formRow}>
+                <View style={[styles.formRow1, {flexDirection: 'row', flex: 1, alignItems: 'center', justifyContent: 'space-between'}]}>
+                  <Text style={[styles.label, {flex: 1}]}>Contraseña</Text>
+                  <TouchableOpacity style={[styles.input, {flex: 1, backgroundColor: VERDE}]} onPress={() => this.handleBloque('BloqueContra')}>
+                    <Text style={{padding: 5, textAlign: 'center', color: BLANCO}}>Cambiar contraseña</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          </View>
-          <View style={styles.formRow}>
-            <View style={styles.formRow1}>
-              <Text style={styles.label}>Género</Text>
-              <View style={Platform.OS === 'ios' ? [styles.input, {overflow: 'hidden', paddingHorizontal: 2, paddingVertical: 15}] : [styles.input, {overflow: 'hidden'}]}>
-                <Picker
-                  selectedValue={this.state.genero}
-                  onValueChange={this.handleChangeGender}
-                  style={Platform.OS !== 'ios' ? {marginVertical: 6} : {marginVertical: -80}}
-                  itemStyle={Platform.OS === 'ios' && {fontSize: 16, }}
-                >
-                  <Picker.Item label="Masculino" value="masculino" />
-                  <Picker.Item label="Femenino" value="femenino" />
-                </Picker>
+              {this.state.bloqueContra && 
+                <View style={[{backgroundColor: BLANCO, marginHorizontal: 20, borderRadius: 20, paddingVertical: 20, marginVertical: 20}, this.state.bloqueCorreo]}>
+                  <View style={styles.formRow}>
+                    <View style={styles.formRow1}>
+                      <Text style={styles.label}>Ingresa tu contraseña actual</Text>
+                      <TextInput 
+                        style={styles.innerBloqueInput}
+                        onChangeText={(antiguaContra) => this.antiguaContra = antiguaContra}
+                        secureTextEntry={true}
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.formRow}>
+                    <View style={styles.formRow1}>
+                      <Text style={styles.label}>Ingresa tu nueva contraseña</Text>
+                      <TextInput 
+                        style={styles.innerBloqueInput}
+                        onChangeText={(newContra) => this.newContra = newContra}
+                        secureTextEntry={true}
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.formRow}>
+                    <View style={styles.formRow1}>
+                      <Text style={styles.label}>Ingresa nuevamente tu nueva contraseña</Text>
+                      <TextInput 
+                        style={styles.innerBloqueInput}
+                        onChangeText={(newContra2) => this.newContra2 = newContra2}
+                        secureTextEntry={true}
+                      />
+                    </View>
+                  </View>
+                  <TouchableOpacity style={[styles.input, {backgroundColor: VERDE, marginHorizontal: 40}]} onPress={this.handleChangeContra}>
+                    <Text style={{padding: 5, textAlign: 'center', color: BLANCO}}>Guardar cambio</Text>
+                  </TouchableOpacity>
+                </View>
+              }
+              <View style={styles.formRow}>
+                <Image source={Separador} resizeMode={'stretch'} style={{width: '100%'}}/>
               </View>
-            </View>
-          </View>
-          <Text style={[{color: VERDE, paddingHorizontal: 40, marginBottom: 20}]}>Al registrarte aceptas los términos y condiciones</Text>
-          <TouchableOpacity style={styles.boton} onPress={this.review}>
-            <Text style={{color: BLANCO}}>Enviar cambios</Text>
-          </TouchableOpacity>
-        </ScrollView>
+              <View style={styles.formRow}>
+                <View style={styles.formRow1}>
+                  <Text style={styles.label}>Nombre</Text>
+                  <TextInput 
+                    style={styles.input}
+                    onChangeText={text => this.setState(() => ({nombre: text, cambios: true}))}
+                    value={this.state.nombre}
+                  />
+                </View>
+                <View style={styles.formRow2}>
+                  <Text style={styles.label}>Apellido</Text>
+                  <TextInput 
+                    style={styles.input}
+                    onChangeText={text => this.setState(() => ({apellido: text, cambios: true}))}
+                    value={this.state.apellido}
+                  />
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <View style={styles.formRow1}>
+                  <Text style={styles.label}>Número de celular</Text>
+                  <TextInput 
+                    style={styles.input}
+                    onChangeText={text => this.setState(() => ({telefono: text, cambios: true}))}
+                    value={this.state.telefono} 
+                  />
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <View style={styles.formRow1}>
+                  <Text style={styles.label}>Dirección de domicilio</Text>
+                  <TextInput 
+                    style={styles.input}
+                    onChangeText={text => this.setState(() => ({direccion: text, cambios: true}))}
+                    value={this.state.direccion} 
+                  />
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <View style={styles.formRow1}>
+                  <View>
+                    {Platform.OS === 'ios'
+                      ? <View>
+                          <Text style={styles.label}>Fecha de nacimiento</Text>
+                          <View style={[styles.input, {paddingVertical: 0, paddingHorizontal: 0, flexDirection: 'row', alignItems: 'center', flex: 1}]}>
+                            <TouchableOpacity style={[styles.boton, {paddingHorizontal: 20, marginVertical: 0}]} onPress={this.showDatePicker}>
+                              <Text style={{color: BLANCO}}>Seleccionar fecha</Text>
+                            </TouchableOpacity>
+                            <Text style={{flex: 1, textAlign: 'center'}}>
+                              {date 
+                                ? `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}` 
+                                : `${(new Date()).getDate()}/${(new Date()).getMonth()+1}/${(new Date()).getFullYear()}`
+                              }
+                            </Text>  
+                          </View>
+                          <DateTimePickerModal
+                            isVisible={showDate}
+                            mode="date"
+                            onConfirm={this.handleChangeDateIOS}
+                            onCancel={this.hideDatePicker}
+                          />
+                        </View>
+                      : <View>
+                          <Text style={styles.label}>Fecha de nacimiento</Text>
+                          <TouchableOpacity style={styles.input} editable={true} onPress={this.showDatePicker}>
+                            <Text style={{color: "#000", paddingVertical: 8, textAlign: 'center'}}>
+                              {date 
+                                ? `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}` 
+                                : `${(new Date()).getDate()}/${(new Date()).getMonth()+1}/${(new Date()).getFullYear()}`
+                              }
+                            </Text>
+                            {showDate && (
+                              <DateTimePicker 
+                                testID="dateTimePicker"
+                                value={date ? date : new Date()}
+                                mode={'date'}
+                                display="default"
+                                is24Hour={true}
+                                onChange={this.handleChangeDateAndroid}
+                              />
+                            )}
+                          </TouchableOpacity>
+                      </View>
+                    }
+                  </View>
+                </View>
+              </View>
+              <View style={styles.formRow}>
+                <View style={styles.formRow1}>
+                  <Text style={styles.label}>Género</Text>
+                  <View style={Platform.OS === 'ios' ? [styles.input, {overflow: 'hidden', paddingHorizontal: 2, paddingVertical: 15}] : [styles.input, {overflow: 'hidden'}]}>
+                    <Picker
+                      selectedValue={this.state.genero}
+                      onValueChange={this.handleChangeGender}
+                      style={Platform.OS !== 'ios' ? {marginVertical: 6} : {marginVertical: -80}}
+                      itemStyle={Platform.OS === 'ios' && {fontSize: 16, }}
+                    >
+                      <Picker.Item label="Masculino" value="masculino" />
+                      <Picker.Item label="Femenino" value="femenino" />
+                    </Picker>
+                  </View>
+                </View>
+              </View>
+              <Text style={[{color: VERDE, paddingHorizontal: 40, marginBottom: 20}]}>Al registrarte aceptas los términos y condiciones</Text>
+              <TouchableOpacity style={[styles.boton, {marginBottom: 20}]} onPress={this.handleChanges}>
+                <Text style={{color: BLANCO}}>Enviar cambios</Text>
+              </TouchableOpacity>
+            </ScrollView>
+        }
+        
       </SafeAreaView>
     )
   }
 }
+
+function mapStateToProps({authedUser, loading}){
+  return {
+    authedUser,
+    loading
+  }
+}
+
+export default connect(mapStateToProps)(EditarPerfil)
 
 const styles = StyleSheet.create({
   AndroidSafeArea: {

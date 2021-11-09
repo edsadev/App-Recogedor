@@ -1,5 +1,6 @@
 import React from 'react'
-import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, SafeAreaView, StatusBar} from 'react-native'
+import {View, Text, StyleSheet, Image, TextInput, TouchableOpacity, SafeAreaView, StatusBar} from 'react-native'
+import Loading from './Loading'
 
 import Hojas2 from '../../utils/images/Hojas_2.png'
 
@@ -7,18 +8,22 @@ import { VERDE, BLANCO } from '../../utils/colors.js'
 import { connect } from 'react-redux'
 
 import { loginApp, API } from '../../utils/api'
-import { setUser } from '../../actions'
+import { setUser, toggleLoading } from '../../actions'
 
 class Login extends React.Component{
   login = async () => {
-    await loginApp(this.correo, this.contraseña)
+    // await loginApp(this.correo.toLowerCase(), this.contraseña)
+    this.props.dispatch(toggleLoading(this.props.loading))
+    await loginApp('jamil.andres123@gmail.net', 'ppp')
       .then(res => {
-        console.log(res.data)
+        // console.log(res.data)
         const data = res.data
         this.props.dispatch(setUser(data.cedula, data.direccion, data.genero, data.correo, data.telefono, data.fecha_nacimiento, data.rango, data.id, data.nombre, data.apellido, data.ecopuntos, data.foto))
+        this.props.dispatch(toggleLoading(this.props.loading))
       })
       .catch(error => {
         alert('Hubo un error al iniciar sesión')
+        this.props.dispatch(toggleLoading(this.props.loading))
         console.error(error, API)
       })
   }
@@ -26,6 +31,11 @@ class Login extends React.Component{
     console.log(this.correo, this.contraseña)
   }
   render(){
+    if(this.props.loading){
+      return (
+        <Loading />
+      )
+    }
     return (
       <SafeAreaView style={styles.container}>
         {Platform.OS === 'ios' && <StatusBar 
@@ -63,7 +73,13 @@ class Login extends React.Component{
   }
 }
 
-export default connect()(Login)
+function mapStateToProps({loading}){
+  return {
+    loading
+  }
+}
+
+export default connect(mapStateToProps)(Login)
 
 const styles = StyleSheet.create({
   container: {
