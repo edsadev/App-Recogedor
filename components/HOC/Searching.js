@@ -7,7 +7,6 @@ import { BLANCO, CELESTE, ROJO, VERDE } from '../../utils/colors'
 
 import Patron from '../../utils/images/patron.png'
 import Logo from '../../utils/images/LogoSinFondo.png'
-import MotoFondo from '../../utils/images/MotoFondo.png'
 
 class Searching extends React.Component{
   state={
@@ -65,7 +64,8 @@ class Searching extends React.Component{
               height: 200,
               aspectRatio: 1 * 1.4,
             }}>
-              <Image source={MotoFondo} style={{width: '100%', height: '100%'}} resizeMode='center'/>
+              {/* <Image source={MotoFondo} style={{width: '100%', height: '100%'}} resizeMode='center'/> */}
+              
             </View>
             <Text style={{color: VERDE, fontSize: 24, fontWeight: 'bold', maxWidth: '70%', textAlign: "center"}}>{this.state.mensaje}</Text>
             <TouchableOpacity 

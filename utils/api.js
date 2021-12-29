@@ -1,6 +1,6 @@
 import axios from "axios"
 
-export const API = process.env.API
+export const API = process.env.API || 'http://200.93.217.234:5000/'
 
 export function loginApp (user, pass) {
   return axios({
@@ -9,27 +9,6 @@ export function loginApp (user, pass) {
     data: {
       user,
       pass
-    }
-  })
-}
-
-export function registerApp (cedula, nombre, apellido, direccion, genero, correo, celular, fecha_nacimiento, usuario, contraseña, sector, foto) {
-  return axios({
-    method: 'post',
-    url: `${API}eco-amigos`,
-    data: {
-      cedula,
-      nombre,
-      apellido,
-      direccion,
-      genero,
-      correo,
-      celular,
-      fecha_nacimiento,
-      usuario,
-      contraseña,
-      sector,
-      foto,
     }
   })
 }
@@ -71,5 +50,20 @@ export function updateUser(id, nombre, apellido, direccion, genero, celular, fec
       fecha_nacimiento,
       foto,
     }
+  })
+}
+
+export function getMaterials(){
+  return axios({
+    method: 'get',
+    url: `${API}materiales`,
+  })
+}
+
+export function getOrders(id){
+  return axios({
+    method: 'post',
+    url: `${API}obtener-pedidos`,
+    data: {id}
   })
 }

@@ -14,3 +14,13 @@ export const _validateContra = (contra, newContra) => {
     return true
   }
 }
+
+export const _validateEmailWhitoutCb = (text) => {
+  let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/
+  if (reg.test(text) === false) {
+    return false
+  }
+  else {
+    return true
+  }
+}

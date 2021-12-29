@@ -1,10 +1,12 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { connect } from 'react-redux';
 
 import { HomeStackNavigator, MainStackNavigator } from './components/Navigation/StackNavigator'
+
+import ErrorCuenta from './components/UI/ErrorCuenta'
 
 class App extends React.Component {
 
@@ -18,13 +20,19 @@ class App extends React.Component {
       )
     }
 
-    if (authedUser.rango === "ecoamigo"){
+    if (authedUser.rango === "ecopicker"){
       return (
         <NavigationContainer styles={styles.container}>
           <HomeStackNavigator/>
         </NavigationContainer>
       )
-    }    
+    } else {
+      return (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <ErrorCuenta />
+        </View>
+      )
+    }
   }
 }
 
