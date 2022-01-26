@@ -11,7 +11,7 @@ import Searching from '../../components/HOC/Searching'
 import Mensaje from '../../components/UI/Mensaje'
 import Reportar from '../UI/Reportar'
 import NewEntry from '../HOC/NewEntry'
-import Solicitud from '../UI/Solicitud'
+import Pedido from '../UI/Pedido'
 
 const Stack = createNativeStackNavigator()
 
@@ -71,9 +71,9 @@ const HomeStackNavigator = () => {
         component={NewEntry}
       />
       <Stack.Screen
-        name="Solicitud"
-        options={Platform.OS !== 'ios' ? {headerShown: false} :{title: 'Ticket', headerBackTitleVisible: false}}
-        component={Solicitud}
+        name="Pedido"
+        options={Platform.OS !== 'ios' ? {headerShown: false} :{title: 'Pedido', headerBackTitleVisible: false}}
+        component={Pedido}
       />
     </Stack.Navigator>
   )

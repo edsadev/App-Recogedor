@@ -3,18 +3,6 @@ export const UNSET_USER = 'UNSET_USER'
 export const UPDATE_EMAIL = 'UPDATE_EMAIL'
 export const UPDATE_USERINFO = 'UPDATE_USERINFO'
 
-export const SET_REWARD = 'SET_REWARD'
-export const UNSET_REWARD = 'UNSET_REWARD'
-
-export const TOGGLE_LOADING = 'TOGGLE_LOADING'
-
-export function toggleLoading(loading) {
-  return {
-    type: TOGGLE_LOADING,
-    loading: !loading
-  }
-}
-
 export function setUser (cedula, direccion, genero, correo, telefono, fecha_nacimiento, rango, id, nombre, apellido, ecopuntos, foto) {
   return {
     type: SET_USER,
@@ -43,6 +31,9 @@ export function updateUserInfo(nombre, apellido, telefono, direccion, fecha_naci
   }
 }
 
+export const SET_REWARD = 'SET_REWARD'
+export const UNSET_REWARD = 'UNSET_REWARD'
+
 export function setReward (id, name, ecopuntos) {
   return {
     type: SET_REWARD,
@@ -55,3 +46,22 @@ export function unsetReward (){
     type: UNSET_REWARD
   }
 }
+
+export const TOGGLE_LOADING = 'TOGGLE_LOADING'
+
+export function toggleLoading(loading) {
+  return {
+    type: TOGGLE_LOADING,
+    loading: !loading
+  }
+}
+
+export const LOAD_ORDERS = 'LOAD_ORDERS'
+
+export function loadOrders(orders){
+  return {
+    type: LOAD_ORDERS,
+    orders
+  }
+}
+

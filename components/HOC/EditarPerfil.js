@@ -17,6 +17,7 @@ import { connect } from 'react-redux';
 import { updateContra, updateCorreo, updateUser } from '../../utils/api';
 import { toggleLoading, updateEmail, updateUserInfo } from '../../actions';
 import Loading from '../UI/Loading';
+import { useURL } from 'expo-linking';
 
 const { UIManager } = NativeModules;
 
@@ -44,8 +45,15 @@ class EditarPerfil extends React.Component{
   }
   componentDidMount(){
     const { authedUser } = this.props
+    console.log(authedUser)
+    let imagen = ""
+    if (authedUser.foto.split(':')[0] === 'data'){
+      imagen = authedUser.foto
+    } else {
+      imagen = `data:image/png;base64,${authedUser.foto}`
+    }
     this.setState(() => ({
-      image: `data:image/png;base64,${authedUser.foto}`,
+      image: imagen,
       date: new Date(authedUser.fecha_nacimiento),
       genero: authedUser.genero,
       nombre: authedUser.nombre,

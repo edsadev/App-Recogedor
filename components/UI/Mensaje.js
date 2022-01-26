@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from "react";
-import { Text, View, StyleSheet, ImageBackground, Image, Animated, StatusBar, SafeAreaView } from "react-native";
+import React, { useRef } from "react";
+import { Text, View, StyleSheet, ImageBackground, Image, Animated, StatusBar, SafeAreaView, TouchableOpacity} from "react-native";
 
 import Patron from '../../utils/images/patron.png'
 import Logo from '../../utils/images/LogoSinFondo.png'
@@ -34,11 +34,6 @@ const FadeInView = (props) => {
 }
 
 export default class Mensaje extends React.Component{
-  componentDidMount(){
-    setTimeout(() => {
-      this.props.navigation.popToTop()
-    }, 3500);
-  }
   render(){
     return(
       <SafeAreaView style={styles.AndroidSafeArea}>
@@ -48,8 +43,10 @@ export default class Mensaje extends React.Component{
           </View>
           <View style={styles.bloqueBlanco}>
             <Text style={{color: VERDE, fontSize: 36, fontWeight: 'bold'}}>¡Gracias!</Text>
-            <FadeInView />
-            <Text style={{marginTop: 12, fontSize: 24, textAlign: 'center', marginHorizontal: 20}}>{this.props.route.params.mensaje}</Text>
+            <FadeInView/>
+            <Text style={{marginTop: 12, fontSize: 22, textAlign: 'center', marginHorizontal: 20}}>{this.props.route.params.mensaje}</Text>
+            {this.props.route.params.token && <Text style={{marginTop: 12, fontSize: 24, textAlign: 'center', marginHorizontal: 20}}>Token: {this.props.route.params.token}</Text>}
+            <TouchableOpacity style={{backgroundColor: VERDE, borderRadius: 25, alignSelf: 'center'}} onPress={() => this.props.navigation.popToTop()}><Text style={{color: BLANCO, fontSize: 22, textAlign: 'center', paddingVertical: 10, paddingHorizontal: 20}}>Finalizar</Text></TouchableOpacity>
           </View>
         </ImageBackground>
       </SafeAreaView>

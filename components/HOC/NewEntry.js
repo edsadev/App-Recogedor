@@ -4,11 +4,15 @@ import { connect } from 'react-redux'
 
 import {Picker} from '@react-native-picker/picker';
 
-import { CELESTE, BLANCO, VERDE, CELESTEOSCURO} from '../../utils/colors'
+import { CELESTE, BLANCO, VERDE, ROJO} from '../../utils/colors'
 
 import { getMaterials } from '../../utils/api'
 
-import { Ionicons } from '@expo/vector-icons'; 
+import { Ionicons } from '@expo/vector-icons'
+
+import { createTicketEcopicker, getOrders} from '../../utils/api'
+
+import { loadOrders } from '../../actions/index'
 
 class NewEntry extends React.Component {
   state = {
@@ -52,12 +56,45 @@ class NewEntry extends React.Component {
       alert('Debes seleccionar al menos un material')
     }
   }
+  handleSubmit = () => {
+    const {orden} = this.props.route.params
+    console.log(orden)
+    console.log(this.state.lista)
+    const newLista = []
+    this.state.lista.map(item => {
+      newLista.push({
+        id: item.id_material,
+        peso: item.peso
+      })
+    })
+    createTicketEcopicker(orden.pedido_id, this.props.authedUser.id, orden.ecoamigo_id, newLista)
+      .then(res => {
+        if(res.data.success){
+          this.props.navigation.navigate('Mensaje', {mensaje: `Se a creado el ticket de tu pedido. A ${res.data.ticket.cliente} se le han acreditado ${res.data.ticket.total_ecopuntos} ecopuntos`})
+          getOrders(this.props.authedUser.id)
+            .then(res => {
+              if (res.data.success){
+                this.props.dispatch(loadOrders(res.data.pedidos))
+              } else {
+                this.props.dispatch(loadOrders([]))
+              }
+            })
+        } else {
+          alert(res.data.mensaje)
+        }
+      })
+      .catch(error => {
+        alert('Ocurrio un error, vuelve a intentarlo')
+        console.log(error)
+      })
+  }
   render(){
     return (
       <SafeAreaView style={[styles.AndroidSafeArea]}>
         {Platform.OS === 'ios' && <StatusBar 
           barStyle={'dark-content'}
         />}
+        {console.log(this.props.route.params.orden)}
         {this.state.page === 0
           ? <View>
               <View style={styles.bloquePeso}>
@@ -114,22 +151,24 @@ class NewEntry extends React.Component {
               </View>
             </View>
           : <View style={styles.formRow}>
-              <View style={[styles.formRow1, {alignItems: 'center'}]}>
-                <Ionicons name="cart" size={48} color={VERDE} style={{marginVertical: 25}}/>                  
-                  {this.state.lista.map(item => (
-                    <View key={item.id} style={{flexDirection: 'row', marginHorizontal: 15, alignItems: 'center', marginVertical: 5}}>
-                      <View style={{justifyContent: 'space-between', flexDirection: 'row', flex: 1}}>
-                        <Text style={{fontSize: 18}}>{this.state.materiales.find(obj => obj.id == item.id_material).nombre}</Text>
-                        <Text style={{fontSize: 18}}>{item.peso}</Text>
+              <View style={[styles.formRow1]}>
+                <View style={{alignItems: 'center'}}>
+                  <Ionicons name="cart" size={48} color={VERDE} style={{marginVertical: 25}}/>                  
+                    {this.state.lista.map(item => (
+                      <View key={item.id} style={{flexDirection: 'row', marginHorizontal: 15, alignItems: 'center', marginVertical: 5}}>
+                        <View style={{justifyContent: 'space-between', flexDirection: 'row', flex: 1}}>
+                          <Text style={{fontSize: 18}}>{this.state.materiales.find(obj => obj.id == item.id_material).nombre}</Text>
+                          <Text style={{fontSize: 18}}>{item.peso}</Text>
+                        </View>
                       </View>
-                    </View>
-                  ))}
-                <View style={{marginVertical: 25}}>
-                  <TouchableOpacity style={[styles.boton, {marginVertical: 10}]} onPress={() => this.handleSubmit()}>
-                    <Text style={{color: BLANCO}}>Enviar</Text>
-                  </TouchableOpacity>
+                    ))}
+                </View>
+                <View style={{marginVertical: 25, flexDirection: 'row', justifyContent: 'space-around'}}>
                   <TouchableOpacity style={[styles.boton, {marginVertical: 10}]} onPress={() => this.handleChangePage(0)}>
                     <Text style={{color: BLANCO}}>Atras</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.boton, {marginVertical: 10}]} onPress={() => this.handleSubmit()}>
+                    <Text style={{color: BLANCO}}>Enviar</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -158,7 +197,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 15,
     paddingVertical: 8,
-    borderRadius: 5,
+    borderRadius: 15,
   },
   formRow: {
     flexDirection: 'row',
@@ -181,4 +220,10 @@ const styles = StyleSheet.create({
   },
 })
 
-export default connect()(NewEntry)
+function mapStateToProps({authedUser}){
+  return {
+    authedUser
+  }
+}
+
+export default connect(mapStateToProps)(NewEntry)

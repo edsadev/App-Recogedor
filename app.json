@@ -1,19 +1,33 @@
 {
   "expo": {
-    "name": "Ecotiendas-app",
-    "slug": "Ecotiendas-app",
+    "name": "Ecotiendas-ecopicker",
+    "slug": "Ecotiendas-ecopicker",
     "version": "1.0.0",
+    "sdkVersion": "42.0.0",
+    "icon": "./utils/images/Icon1024.png",
+    "notification": {
+      "icon": "./utils/images/Icon1024.png"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
-    "userInterfaceStyle": "automatic"
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "com.edmundo994.Ecotiendasecopicker",
+      "versionCode": 1
+    },
+    "ios": {
+      "icon": "./utils/images/Icon1024.png",
+      "buildNumber": "1",
+      "infoPlist": {
+        "CFBundleIconName": "EcopickerIcon"
+      },
+      "supportsTablet": false,
+      "bundleIdentifier": "com.edmundo994.Ecotiendasecopicker"
+    },
+    "plugins": [
+      "@config-plugins/react-native-ble-plx"
+    ]
   },
-  "name": "Ecotiendas-app",
-  "android":{
-    "config":{
-      "googleMaps":{
-        "apiKey": "AIzaSyBXkQpabGQPYgZRGqNiyjQrzKf_o_C5S6o"
-      }
-    }
-  }
+  "name": "Ecotiendas-ecopicker"
 }

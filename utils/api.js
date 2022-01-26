@@ -67,3 +67,11 @@ export function getOrders(id){
     data: {id}
   })
 }
+
+export function createTicketEcopicker(pedido, ecopicker, ecoamigo, materiales){
+  return axios({
+    method: 'post',
+    url: `${API}crear-ticket-ecopicker`,
+    data: {pedido, ecopicker, ecoamigo, materiales}
+  })
+}

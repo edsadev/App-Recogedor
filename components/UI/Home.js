@@ -7,19 +7,20 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { unsetUser, toggleLoading } from '../../actions';
 
+import { loadOrders } from '../../actions/index'
+
+import { CELESTE, BLANCO, VERDE, CELESTEOSCURO} from '../../utils/colors'
+import { getOrders } from '../../utils/api';
+
 const { UIManager } = NativeModules;
 
 UIManager.setLayoutAnimationEnabledExperimental &&
   UIManager.setLayoutAnimationEnabledExperimental(true);
 
-import { CELESTE, BLANCO, VERDE, CELESTEOSCURO} from '../../utils/colors'
-import { getOrders } from '../../utils/api';
-
 class Home extends React.Component {
   state = {
     menuBottom: -1000,
     refreshing: false,
-    orders: [],
   }
   handleMenu = () => {
     LayoutAnimation.easeInEaseOut()
@@ -33,10 +34,9 @@ class Home extends React.Component {
     this.props.dispatch(toggleLoading(true))
     getOrders(this.props.authedUser.id)
       .then(res => {
-        this.setState((state) => ({
-          ...state,
-          orders: res.data.pedidos
-        }))
+        if (res.data.success){
+          this.props.dispatch(loadOrders(res.data.pedidos))
+        }
       })
   }
   onRefresh = () => {
@@ -45,6 +45,14 @@ class Home extends React.Component {
     }))
     try {
       (async() => {
+        getOrders(this.props.authedUser.id)
+          .then(res => {
+            if(res.data.success){
+              this.props.dispatch(loadOrders(res.data.pedidos))
+            } else {
+              alert(res.data.mensaje)
+            }
+          })
         this.setState((state) => ({
           refreshing: !state.refreshing
         }))
@@ -64,7 +72,7 @@ class Home extends React.Component {
   }
   render(){
     const { authedUser, navigation } = this.props
-    const base64Image = `data:image/png;base64,${authedUser.foto}`
+    const { orders } = this.props.orders
     return (
       <SafeAreaView style={[styles.AndroidSafeArea]}>
         {Platform.OS === 'ios' && <StatusBar 
@@ -78,7 +86,7 @@ class Home extends React.Component {
         <View style={{flex: 1, backgroundColor: CELESTEOSCURO}}>
           <View style={styles.bloquePremios}>
             <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 30, paddingVertical: 20}}>
-              <Text style={{color: VERDE, fontSize: 32, fontWeight: 'bold'}}>Solicitudes</Text>
+              <Text style={{color: VERDE, fontSize: 32, fontWeight: 'bold'}}>Pedidos</Text>
             </View>
             <ScrollView 
               style={{flex: 1}} 
@@ -91,15 +99,15 @@ class Home extends React.Component {
                   />
               }
             >
-              {this.state.orders.length > 0 && this.state.orders.map((orden) => (
-                <View key={orden.pedido_id} style={{padding: 10, backgroundColor: CELESTE, flexDirection: 'row', marginVertical: 5, marginHorizontal: 15, borderRadius: 15}}>
-                  <View style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
+              {orders && orders.length > 0 && orders.map((orden) => (
+                <View key={orden.pedido_id} style={{padding: 10, backgroundColor: CELESTE, flexDirection: 'row', marginVertical: 5, marginHorizontal: 15, borderRadius: 15, alignItems: 'center'}}>
+                  <View style={{paddingLeft: 15, flex: 1}}>
                     <Text style={{fontSize: 16, fontWeight: 'bold', marginBottom: 5}}>{orden.cliente}</Text>
-                    <Text style={{fontSize: 16}}>{(new Date(Date.parse(orden.fecha_registro))).toLocaleString()}</Text>
+                    <Text style={{fontSize: 16}}>{(new Date(Date.parse(orden.fecha_registro))).toLocaleDateString()} {(new Date(Date.parse(orden.fecha_registro))).toLocaleTimeString()}</Text>
                     <Text style={{fontSize: 16}}>Cel: {orden.celular}</Text>
                   </View>
-                  <TouchableOpacity style={{backgroundColor: BLANCO, padding: 10, zIndex: 100, borderRadius: 20, margin: 15}} onPress={() => navigation.navigate('Solicitud', {orden})}>
-                    <Text style={{textAlign: 'center'}}>Ver solicitud</Text>
+                  <TouchableOpacity style={{backgroundColor: BLANCO, padding: 10, zIndex: 100, borderRadius: 20, margin: 15}} onPress={() => navigation.navigate('Pedido', {orden})}>
+                    <Text style={{textAlign: 'center'}}>Ver pedido</Text>
                   </TouchableOpacity>
                 </View>
               ))}
@@ -190,9 +198,10 @@ const styles = StyleSheet.create({
   },
 })
 
-function mapStateToProps({authedUser}){
+function mapStateToProps({authedUser, orders}){
   return {
-    authedUser
+    authedUser,
+    orders
   }
 }
 

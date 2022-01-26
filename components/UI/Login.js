@@ -61,6 +61,8 @@ class Login extends React.Component{
             //   return res
             // })
             .then(res => {
+              const objeto = new Object({...res.data, foto: ""})
+              console.log(objeto)
               const data = res.data
               this.props.dispatch(setUser(data.cedula, data.direccion, data.genero, data.correo, data.telefono, data.fecha_nacimiento, data.rango, data.id, data.nombre, data.apellido, data.ecopuntos, data.foto))
             })
