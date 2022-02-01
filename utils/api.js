@@ -3,6 +3,7 @@ import axios from "axios"
 export const API = process.env.API || 'http://200.93.217.234:5000/'
 
 export function loginApp (user, pass) {
+  console.log(API)
   return axios({
     method: 'post',
     url: `${API}login`,

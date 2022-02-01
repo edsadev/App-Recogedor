@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Platform, StatusBar, TouchableOpacity} from 'react-native'
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Platform, StatusBar, TouchableOpacity, PermissionsAndroid, Animated, Easing, Image} from 'react-native'
 import { connect } from 'react-redux'
 
 import {Picker} from '@react-native-picker/picker';
@@ -14,21 +14,190 @@ import { createTicketEcopicker, getOrders} from '../../utils/api'
 
 import { loadOrders } from '../../actions/index'
 
+import RNBluetoothClassic, {BluetoothDevice, BluetoothEventType} from 'react-native-bluetooth-classic'
+
+import loading from '../../utils/images/loading.png'
+
+import axios from 'axios';
+
 class NewEntry extends React.Component {
+  rotateValue = new Animated.Value(0)
   state = {
     idTicket: "",
-    peso: 10,
+    peso: 0,
     materiales: [],
     material: "",
     lista: [],
-    page: 0
+    page: 0,
+    balanza: {},
+    // Balanza Bluetooth
+    bloqueDispositivos: false,
+    discovering: false,
+    connected: false,
+    devices: [],
+    devicesList: [],
+    connecting: false,
   }
   componentDidMount(){
+    this.handleBtAvailable()
     getMaterials()
       .then(res => {
         const id = Object.keys(res.data.materiales)
         this.setState(() => ({materiales: id.map(id => res.data.materiales[id]), material: id[0]}))
       })
+  }
+  async componentWillUnmount() {
+    if (this.state.connected) {
+      try {
+        if (this.state.balanza !== {}){
+          await this.state.balanza.disconnect();
+          console.log("Se desconecto el dispositivo")
+        }
+      } catch (error) {
+        // Unable to disconnect from device
+        console.log(error)
+      }
+    }
+    this.uninitializeRead();
+  }
+  uninitializeRead() {
+    if (this.readInterval) {
+      clearInterval(this.readInterval);
+    }
+  }
+  requestPermission = async () => {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
+        title: "Request for Location Permission",
+        message: "Bluetooth Scanner requires access to Fine Location Permission",
+        buttonNeutral: "Ask Me Later",
+        buttonNegative: "Cancel",
+        buttonPositive: "OK"
+      }
+    );
+    return (granted === PermissionsAndroid.RESULTS.GRANTED);
+  }
+
+  handleBtAvailable = async () => {
+    try {
+      const available = await RNBluetoothClassic.isBluetoothAvailable()
+      return available
+    } catch (err) {
+      // Handle accordingly
+      alert("Tu dispositivo no permite conexión bluetooth")
+    }
+  }
+  handleBtEnabled = async () => {
+    try {
+      const enabled = await RNBluetoothClassic.isBluetoothEnabled();
+      return enabled
+    } catch (err) {
+        // Handle accordingly
+      alert("Tu dispositivo tuvo un error al tratar de saber si el bluetooth estaba encendido")
+    }
+  }
+  
+  bondedList = async () => {
+    const permission = await this.requestPermission();
+    if (permission){
+      try {
+        if(await this.handleBtEnabled()){
+          this.setState((state) => ({bloqueDispositivos: !state.bloqueDispositivos}))
+          this.getList()
+        } else {
+          alert("Activa el bluetooth...")
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
+  }
+  getList = async () => {
+    this.rotateValue = new Animated.Value(0)
+    Animated.loop(
+      Animated.timing(this.rotateValue, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: true, // <-- Add this
+        easing: Easing.linear
+      })
+    ).start()
+    try {
+      await this.setState((state) => ({discovering: !state.discovering}))
+      const devices = await RNBluetoothClassic.getBondedDevices()
+      await this.setState({devices})
+      await this.setState((state) => ({discovering: !state.discovering}))
+      // const device = await RNBluetoothClassic.pairDevice(id);
+    } catch (err) {
+      console.log(err)
+      await this.setState((state) => ({discovering: !state.discovering}))
+      alert("Hubo un error al tratar de conseguir los dispositivos paireds")
+    }
+  }
+  connectDevice = async (device) => {
+    this.rotateValue = new Animated.Value(0)
+    Animated.loop(
+      Animated.timing(this.rotateValue, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: true, // <-- Add this
+        easing: Easing.linear
+      })
+    ).start()
+    try {
+      await this.setState((state) => ({connecting: !state.connecting}))
+      let connection = await device.isConnected()
+      if (!connection) {
+        connection = await device.connect({
+          DELIMITER: '\r',
+        });
+        if (connection){
+          await this.setState((state) => ({connecting: !state.connecting, bloqueDispositivos: !state.bloqueDispositivos, connected: !state.connected, balanza: device}))
+          console.log("Se conecto al dispositivo")
+          alert(`Conectado al dispositivo ${device.name}`)
+          this.initializeRead(device);
+        } else {
+          await this.setState((state) => ({connecting: !state.connecting}))
+          alert('No se pudo conectar')
+        }
+      } else {
+        await this.setState((state) => ({connecting: !state.connecting, bloqueDispositivos: !state.bloqueDispositivos, connected: !state.connected, balanza: device}))
+        console.log("Se conecto al dispositivo")
+        alert(`Conectado al dispositivo ${device.name}`)
+        this.initializeRead(device);
+      }
+    } catch (error) {
+      // Handle error accordingly
+      await this.setState((state) => ({connecting: !state.connecting}))
+      console.log(error)
+      alert("Hubo un error al tratar de conectar al dispositivo")
+    }
+  }
+  initializeRead = async (device) => {
+    console.log(`Se inicio la lectura del dispositivo ${device.name}`)
+    this.readInterval = setInterval(() => this.performRead(device), 100);
+  }
+  async performRead(device){
+    try {
+      // console.log('Polling for available messages');
+      let available = await device.available();
+      // console.log(`There is data available [${available}], attempting read`);
+
+      if (available > 0) {
+        for (let i = 0; i < available; i++) {
+          // console.log(`reading ${i}th time`);
+          let data = await device.read();
+          let b = Buffer.from(data, 'utf-8')
+          // console.log(`Read data ${data}`);
+          // console.log(JSON.stringify(b));
+          let peso = parseFloat(b.toString("utf-8").split("   ")[1])
+          // console.log(veryLargeTextWorks)
+          this.setState({peso})
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
   }
   handleAddList = () => {
     const newLista = this.state.lista
@@ -89,20 +258,67 @@ class NewEntry extends React.Component {
       })
   }
   render(){
+    const spin = this.rotateValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '360deg']
+    })
     return (
       <SafeAreaView style={[styles.AndroidSafeArea]}>
         {Platform.OS === 'ios' && <StatusBar 
           barStyle={'dark-content'}
         />}
-        {console.log(this.props.route.params.orden)}
+        {/*console.log(this.props.route.params.orden)*/}
+        {this.state.bloqueDispositivos && 
+          <View style={[styles.backgroundOscuro]}>
+            <View style={styles.card}>
+              <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                <Text style={{fontSize: 24}}>Dispositivos</Text>
+                <TouchableOpacity onPress={() => {
+                  this.setState(() => ({
+                    bloqueDispositivos: false
+                  }))
+                }}>
+                  <Ionicons name="ios-close-sharp" size={28} color="black" />
+                </TouchableOpacity>
+              </View>
+              <View style={{flex: 1}}>
+                {this.state.discovering || this.state.connecting
+                  ? <Animated.View style={{transform: [{ rotate: spin }], flex: 1}}>
+                      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                        <Image source={loading} style={{width: 100, height: 100}}/>
+                      </View>
+                    </Animated.View>
+                  : <SafeAreaView style={{marginVertical: 10, flex: 1}}>
+                      <ScrollView>
+                        {this.state.devices.length > 0 && this.state.devices.map(device => (
+                          <TouchableOpacity key={device.id} style={{backgroundColor: CELESTE, paddingVertical: 15, paddingHorizontal: 10, marginHorizontal: 5, marginBottom: 10, borderRadius: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}} onPress={() => this.connectDevice(device)}>
+                            <View>
+                              <Text><Text style={{fontWeight: 'bold', fontSize: 16}}>Nombre:</Text> {device.name}</Text>
+                              <Text><Text style={{fontWeight: 'bold', fontSize: 16}}>ID:</Text> {device.id}</Text>
+                            </View>
+                            <Ionicons name="bluetooth" size={24} color="black" />
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </SafeAreaView>
+                }
+              </View>
+            </View>
+          </View>
+        }
         {this.state.page === 0
           ? <View>
               <View style={styles.bloquePeso}>
                 <Text style={{fontWeight: 'bold', fontSize: 16, textAlign: 'center', paddingVertical: 10}}>Peso de material</Text>
-                <Text style={{textAlign: 'center', textDecorationLine: 'underline', textDecorationStyle: 'solid', fontSize: 64, paddingVertical: 10}}>{this.state.peso}</Text>
-                <TouchableOpacity style={[styles.boton, {marginVertical: 10}]}>
-                  <Text style={{color: BLANCO}}>Calcular peso</Text>
-                </TouchableOpacity>
+                <Text style={{textAlign: 'center', textDecorationLine: 'underline', textDecorationStyle: 'solid', fontSize: 64, paddingVertical: 10}}>{this.state.peso} Kg</Text>
+                {!this.state.connected
+                  ? <TouchableOpacity style={[styles.boton, {marginVertical: 10}]} onPress={this.bondedList}>
+                      <Text style={{color: BLANCO}}>Conectar balanza</Text>
+                    </TouchableOpacity>
+                  : <TouchableOpacity style={[styles.boton, {marginVertical: 10}]}>
+                      <Text style={{color: BLANCO}}>Calcular peso</Text>
+                    </TouchableOpacity>
+                }
               </View>
               <View>
                 <Text style={{textAlign: 'center', fontWeight: 'bold', fontSize: 24, paddingVertical: 15, marginTop: 15}}>Tipo de material</Text>
@@ -185,6 +401,25 @@ const styles = StyleSheet.create({
     backgroundColor: BLANCO,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     justifyContent: 'center'
+  },
+  backgroundOscuro: {
+    position: "absolute",
+    height: "100%",
+    width: "100%",
+    backgroundColor: "rgba(0,0,0,0.2)",
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+    display: 'none'
+  },
+  card: { 
+    height: '70%',
+    width: '80%',
+    backgroundColor: BLANCO,
+    borderRadius: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    position: 'relative',
   },
   bloquePeso: {
     backgroundColor: CELESTE,
