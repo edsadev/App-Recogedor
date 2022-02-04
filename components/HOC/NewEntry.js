@@ -311,13 +311,10 @@ class NewEntry extends React.Component {
               <View style={styles.bloquePeso}>
                 <Text style={{fontWeight: 'bold', fontSize: 16, textAlign: 'center', paddingVertical: 10}}>Peso de material</Text>
                 <Text style={{textAlign: 'center', textDecorationLine: 'underline', textDecorationStyle: 'solid', fontSize: 64, paddingVertical: 10}}>{this.state.peso} Kg</Text>
-                {!this.state.connected
-                  ? <TouchableOpacity style={[styles.boton, {marginVertical: 10}]} onPress={this.bondedList}>
-                      <Text style={{color: BLANCO}}>Conectar balanza</Text>
-                    </TouchableOpacity>
-                  : <TouchableOpacity style={[styles.boton, {marginVertical: 10}]}>
-                      <Text style={{color: BLANCO}}>Calcular peso</Text>
-                    </TouchableOpacity>
+                {!this.state.connected &&
+                  <TouchableOpacity style={[styles.boton, {marginVertical: 10}]} onPress={this.bondedList}>
+                    <Text style={{color: BLANCO}}>Conectar balanza</Text>
+                  </TouchableOpacity>
                 }
               </View>
               <View>
