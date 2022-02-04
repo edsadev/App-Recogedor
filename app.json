@@ -2,7 +2,7 @@
   "expo": {
     "name": "Ecotiendas-ecopicker",
     "slug": "Ecotiendas-ecopicker",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "icon": "./utils/images/Icon1024.png",
     "notification": {
       "icon": "./utils/images/Icon1024.png"
@@ -13,7 +13,7 @@
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.edmundo994.Ecotiendasecopicker",
-      "versionCode": 1,
+      "versionCode": 2,
       "permissions": [
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
@@ -23,7 +23,7 @@
     },
     "ios": {
       "icon": "./utils/images/Icon1024.png",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "CFBundleIconName": "EcopickerIcon",
         "NSBluetoothPeripheralUsageDescription": "Se necesita el bluetooth para que la app funcione correctamente y conectarse a la balanza"
