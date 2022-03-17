@@ -39,7 +39,6 @@
         }
       ],
       "expo-location",
-      "@config-plugins/react-native-ble-plx",
       "./plugins/patch-android-fixes.plugin.js",
       ["with-rn-bluetooth-classic",
         {
